@@ -1,0 +1,20 @@
+site_name: OpenFan API
+site_url: https://sasakaranovic.com/
+repo_url: https://sasakaranovic.com/projects/openfan-controller/
+copyright: This work © 2023 by Sasa Karanovic is licensed under GPL-3.0 license
+nav:
+  - Home: index.md
+  - API documentation: api.md
+  - 'Source Code': 'https://github.com/SasaKaranovic/OpenFanController'
+  - 'Project Page': 'https://sasakaranovic.com/projects/openfan-controller/'
+  - 'Open Fan by Karanovic Research': 'https://sasakaranovic.com/'
+
+
+theme: readthedocs
+
+markdown_extensions:
+  - admonition
+  - nl2br
+  - sane_lists
+
+site_dir: ../docs-html

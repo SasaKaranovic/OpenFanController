@@ -1,0 +1,47 @@
+server:
+  hostname: localhost
+  port: 3000
+  communication_timeout: 1
+hardware:
+  port:
+fan_profiles:
+  1000 RPM:
+    type: rpm
+    values:
+    - 1000
+    - 1000
+    - 1000
+    - 1000
+    - 1000
+    - 1000
+    - 1000
+    - 1000
+    - 1000
+    - 1000
+    name: 1000 RPM
+  MadMax:
+    type: PWM
+    values:
+    - 100
+    - 100
+    - 100
+    - 100
+    - 100
+    - 100
+    - 100
+    - 100
+    - 100
+    - 100
+  1200RPM:
+    type: RPM
+    values:
+    - 1200
+    - 1200
+    - 1200
+    - 1200
+    - 1200
+    - 1200
+    - 1200
+    - 1200
+    - 1200
+    - 1200
