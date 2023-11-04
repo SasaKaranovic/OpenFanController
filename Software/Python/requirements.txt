@@ -1,4 +1,5 @@
-tornado
+tornado==6.3.2
 argparse
-pyserial
-ruamel.yaml
+pyserial==3.5
+ruamel.yaml==0.17.21
+ruamel.yaml.clib==0.2.7
