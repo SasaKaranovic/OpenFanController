@@ -210,17 +210,21 @@ class FAN_API_Service(Application):
 
         hardware_config = self.config.get_hardware_config()
         cfg_port = hardware_config.get('port', None)
-        env_port = os.getenv(['OPENFANCOMPORT'], default=None)
+        env_port = os.getenv('OPENFANCOMPORT', default=None)
 
         if cfg_port:
             self.serialPort = cfg_port
+            logger.info(f"Using COM port `{self.serialPort}` (specified in `config.yaml` file).")
         elif env_port is not None:
             self.serialPort = env_port
+            logger.info(f"Using COM port `{self.serialPort}` (specified in `OPENFANCOMPORT` env variable).")
         else:
             self.serialPort = FanCommander.find_fan_controller()
             if self.serialPort is None:
                 logger.error("Could not find Fan controller. Please make sure it's plugged in and (if necessary) drivers are installed.")
                 raise Exception("Could not find Fan controller. Please make sure it's plugged in and (if necessary) drivers are installed.")
+
+            logger.info(f"Using COM port `{self.serialPort}` (Found through USB VID:PID).")
 
         logger.info("Fan Controller port: {}".format(self.serialPort))
         self.fan_commander = FanCommander(self.serialPort)
