@@ -203,11 +203,19 @@ class FAN_API_Service(Application):
 
         self.config = ConfigReader('config.yaml')
 
-        # If config contains COM port, use it. Otherwise try to find it
+        # API service will look for OpenFAN serial port in the following order
+        # 1. Check if `hardware->port` entry is specified in `config.yaml`
+        # 2. Check if `OPENFANCOMPORT` is specified in OS environment variable
+        # 3. Try to find OpenFAN controller by searching for USB VID and PID
+
         hardware_config = self.config.get_hardware_config()
-        port = hardware_config.get('port', None)
-        if port:
-            self.serialPort = port
+        cfg_port = hardware_config.get('port', None)
+        env_port = os.getenv(['OPENFANCOMPORT'], default=None)
+
+        if cfg_port:
+            self.serialPort = cfg_port
+        elif env_port is not None:
+            self.serialPort = env_port
         else:
             self.serialPort = FanCommander.find_fan_controller()
             if self.serialPort is None:
