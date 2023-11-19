@@ -1,0 +1,26 @@
+name: cd docs
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - 'Documentation/src/*'
+
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure Git Credentials
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - run: pip install mkdocs
+      - run: pip install -r Documentation/src/requirements.txt
+      - run: mkdocs gh-deploy --force
