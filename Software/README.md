@@ -31,7 +31,7 @@ For example:
 
 `docker build github.com/sasakaranovic/openfancontroller -t sasakaranovic/openfan`
 
-`docker run --name OpenFAN -p 3000:3000 --device=/dev/ttyACM0 sasakaranovic/openfan:latest`
+`docker run --name OpenFAN -p 3000:3000 --device=/dev/ttyACM0 -e OPENFANCOMPORT=/dev/ttyACM0 sasakaranovic/openfan:latest`
 
 
 ### Running without Python or Docker?
