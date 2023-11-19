@@ -1,7 +1,7 @@
 # OpenFAN API Documentation
 
 
-OpenFAN provides an API that allows you to interact with it remtely or integrate OpenFAN into another system.
+OpenFAN provides an API that allows you to interact with it remotely or integrate OpenFAN into another system.
 
 You can use this for example to monitor/log the fan RPM, or to apply different FAN profiles based on system temperature/load etc. You could also use it for detection of stalled/blocked fans or to coordinate multiple OpenFan instances.
 
@@ -11,7 +11,7 @@ You can use this for example to monitor/log the fan RPM, or to apply different F
 The API server runs on port `3000` and accepts HTTP GET/POST requests.
 In order to send requests and read responses, you will use the machine IP address. If the API server is running on the locally, you can access it via `localhost` or `127.0.0.1`.
 
-Assuming you are running OpenFAN locally, the base API URL can be accessed at `http://localhost:3000/api/v0` and at the same time you would be able to access the GUI interface via your web-broser on `http://localhost:3000`.
+Assuming you are running OpenFAN locally, the base API URL can be accessed at `http://localhost:3000/api/v0` and at the same time you would be able to access the GUI interface via your web-browser on `http://localhost:3000`.
 
 The OpenAPI server will serve both the API and the GUI at the same time.
 
@@ -21,7 +21,7 @@ The OpenAPI server will serve both the API and the GUI at the same time.
 
 
 ## Access remotely over network
-If you are accessing/controling a remote OpenFAN, you would use the IP address of the remote machine on which OpenFAN is running. For example if you want to access OpenFAN API on a networked machine that has IP address `192.168.0.55` you would use `http://192.168.0.55:3000/api/v0` as the API base URL and `http://192.168.0.55:3000` to access the GUI interface.
+If you are accessing/controlling a remote OpenFAN, you would use the IP address of the remote machine on which OpenFAN is running. For example if you want to access OpenFAN API on a networked machine that has IP address `192.168.0.55` you would use `http://192.168.0.55:3000/api/v0` as the API base URL and `http://192.168.0.55:3000` to access the GUI interface.
 
 !!! danger annotate "Security!"
 
@@ -99,7 +99,7 @@ Use this function to set fan number `{fan}` to RPM value of `{rpm}`.
 
 > `GET` - `http://localhost:3000/api/v0/fan/1/rpm?value=1200`
 
-Reponse is a JSON object
+Response is a JSON object
 
 ```json
 {
@@ -129,7 +129,7 @@ Use this function to set **PWM** of fan number `{fan}` to `{pwm}` percent.
 > `GET` - `http://localhost:3000/api/v0/fan/1/pwm?value=60`
 
 
-Reponse is a JSON object
+Response is a JSON object
 
 ```json
 {
@@ -154,7 +154,7 @@ New fan profiles can be created through the GUI (recommened) or via API.
 > `GET` - `http://localhost:3000/api/v0/profiles/list`
 
 
-Reponse is a JSON object
+Response is a JSON object
 
 ```json
 {
@@ -249,7 +249,7 @@ Use this function to apply a `{profile_name}` fan profile. This profile has to b
 > `GET` - `http://localhost:3000/api/v0/profiles/set?name=?value=1000RPM`
 
 
-Reponse is a JSON object
+Response is a JSON object
 ```json
 {
     "status": "ok",
@@ -268,7 +268,7 @@ This function can be used to identify
 
 - which hardware OpenFAN is running on
 - what is the hardware architecture
-- what is the firmware version curently running on the device
+- what is the firmware version currently running on the device
 - what is the protocol version used for communication
 
 It will also provide software information like release date and version.
