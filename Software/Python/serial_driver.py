@@ -95,7 +95,7 @@ class SerialHardware(object):
             logger.debug(f"\tLocation: {port.location}")
             logger.debug(f"\tInterface: {port.interface}")
             if port.device == port_info:
-                logger.debug("Using '{}' as GaugeHub COM port".format(port.device))
+                logger.debug("Using '{}' COM port".format(port.device))
                 return port
         return None
 
