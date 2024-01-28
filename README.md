@@ -8,8 +8,16 @@
 Above video shows the finished 10 channel PC fan controller, how it works and motivation behind some of the design decisions.
 
 ## How can I build my own?
+
 The above video explains the idea and how hardware and firmware works. It's recommended that you watch that first.
 Hardware and firmware build instructions and source files are available in their respective folders.
+
+---
+
+## Can I buy OpenFAN
+
+Yes you can! It's available on the [web shop](https://shop.sasakaranovic.com/products/openfan-pc-fan-controller).
+
 
 ---
 
