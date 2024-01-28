@@ -23,4 +23,4 @@ jobs:
           python-version: 3.9
       - run: pip install mkdocs
       - run: pip install -r Documentation/src/requirements.txt
-      - run: mkdocs gh-deploy --force
+      - run: mkdocs gh-deploy --force --config-file Documentation/src//mkdocs.yml
