@@ -1,11 +1,11 @@
 import re
 import time
+from threading import Lock
 import serial as _serial
 import serial.tools.list_ports as _lp
 import serial.tools.list_ports_common as _lpc
 from serial.tools.list_ports import comports
 from base_logger import *
-from threading import Lock
 
 
 class SerialHardware(object):
@@ -25,7 +25,7 @@ class SerialHardware(object):
             self.port_info = port_info
 
         if not isinstance(self.port_info, _lpc.ListPortInfo):
-            raise TypeError("The port_info must be of type {}".format(self.__class__, _lpc.ListPortInfo))
+            raise TypeError("The port_info must be of type {} (given: {})".format(self.__class__, _lpc.ListPortInfo))
 
         self.port = _serial.Serial(
             port=self.port_info.device,
@@ -103,8 +103,6 @@ class SerialHardware(object):
         rx_lines = []
 
         if not status_re:
-            regex = self.status_re
-        else:
             regex = status_re
         compiled_re = re.compile(regex, flags=re.IGNORECASE)
 
@@ -125,13 +123,11 @@ class SerialHardware(object):
         if status:
             if return_all:
                 return lines
-            else:
-                return True
-        else:
-            if return_all:
-                return []
-            else:
-                return False
+            return True
+
+        if return_all:
+            return []
+        return False
 
     def read_until_response(self, timeout=5):
         rx_lines = []
@@ -157,8 +153,7 @@ class SerialHardware(object):
         command = self.serialPrefix + command + self.serialSuffix
 
         if self.flush_on_write and self.port.in_waiting > 0:
-            logger.warn("Warning: there were bytes in waiting when there should be none, they were discarded. port: \"{}\" description \"{}\"".format(self.port_info.name, self.description()))
-            serial_logger.warn("Warning: there were bytes in waiting when there should be none, they were discarded. port: \"{}\" description \"{}\"".format(self.port_info.name, self.description()))
+            logger.error("Warning: there were bytes in waiting when there should be none, they were discarded. port: \"{}\" description \"{}\"".format(self.port_info.name, self.description()))
 
         if self.flush_on_write:
             self.port.reset_input_buffer()
@@ -170,7 +165,6 @@ class SerialHardware(object):
             return True
         except _serial.SerialTimeoutException:
             logger.error("Warning: writing timed out. port: \"{}\" description \"{}\"".format(self.port_info.name, self.description()))
-            serial_logger.error("Warning: writing timed out. port: \"{}\" description \"{}\"".format(self.port_info.name, self.description()))
             return False
 
     def handle_serial_read(self):
@@ -180,7 +174,7 @@ class SerialHardware(object):
             return ret
 
         except _serial.SerialTimeoutException:
-            logger.warn("Warning: reading response timed out. port: \"{}\" description \"{}\"".format(self.port_info.name, self.description()))
+            logger.error("Warning: reading response timed out. port: \"{}\" description \"{}\"".format(self.port_info.name, self.description()))
             return None
 
         return None
