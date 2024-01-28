@@ -41,11 +41,14 @@ def default_formatter():
               ('%(message)s', 'green')]
 
     # platform_system() is 'Windows' on the powershell
-    if sys.stderr.isatty():
-        # If running in a TTY, show colored output
-        fmt = ' '.join([colorize(x[0], x[1]) for x in pieces])
-    else:
-        # If being directed or piped, show plaintext
+    try:
+        if sys.stderr.isatty():
+            # If running in a TTY, show colored output
+            fmt = ' '.join([colorize(x[0], x[1]) for x in pieces])
+        else:
+            # If being directed or piped, show plaintext
+            fmt = ' '.join([x[0] for x in pieces])
+    except AttributeError:
         fmt = ' '.join([x[0] for x in pieces])
 
     return logging.Formatter(fmt, "%b %d %Y %H:%M:%S")
