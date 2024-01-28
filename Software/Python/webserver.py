@@ -68,6 +68,7 @@ class FanProfile_Add(BaseHandler):
         try:
             fan_profile = [int(i) for i in fan_profile]
         except Exception as e:
+            logger.error(f'FanProfile_Add error: {e}')
             return self.send_response(status='fail', message='Fan profile can only contain integer values!', data=None)
 
         if len(fan_profile) != 10:
@@ -103,8 +104,11 @@ class FanProfile_Set(BaseHandler):
             return self.send_response(status='fail', message='Profile does not exist! (Names are case-sensitive!)', data=None)
 
         profile_type = profile['type'].upper()
-        if profile_type != "PWM" and profile_type != "RPM":
-            return self.send_response(status='fail', message=f'Malformed profile! (profile type expected to be "pwm" or "rpm" but "{profile_type}" found.)', data=None)
+        if profile_type not in ["PWM", "RPM"]:
+            return self.send_response(
+                                      status='fail',
+                                      message=f'Malformed profile type! (expected "pwm" or "rpm". "{profile_type}" received.)',
+                                      data=None)
 
         profile_values = profile['values']
 
@@ -169,7 +173,7 @@ class Info_Handler(BaseHandler):
         data['firmware'] = self.handler.get_hw_info()
         data['software'] = "Version: 0.1\r\nBuild: 2023-09-29" #FIXME: This will be auto-generated
 
-        return self.send_response(status='ok', message=f'System information', data=data)
+        return self.send_response(status='ok', message='System information', data=data)
 
 # -- Default 404 --
 class Default_404_Handler(RequestHandler):
@@ -193,7 +197,7 @@ class FileHandler(RequestHandler):
             raise HTTPError(status_code=404)
         content_type, _ = guess_type(file_location)
         self.add_header('Content-Type', content_type)
-        with open(file_location) as source_file:
+        with open(file_location, encoding="utf8") as source_file:
             self.write(source_file.read())
 
 
@@ -269,8 +273,8 @@ def signal_handler(signal, frame):
 
 def shutdown():
     logger.info('Stopping API server')
-    logger.info('Will shutdown in %s seconds ...', 3)
-    io_loop = tornado.ioloop.IOLoop.instance()
+    logger.info('Will shutdown in 3 seconds ...')
+    io_loop = IOLoop.instance()
     deadline = time.time() + 3
 
     def stop_loop():
