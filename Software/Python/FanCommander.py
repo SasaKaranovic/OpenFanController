@@ -96,7 +96,7 @@ class FanCommander(SerialHardware):
     def find_fan_controller(cls):
         dialPort = None
         availablePorts = comports()
-        logger.debug("Searching for COM port with VID:1027 and PID:24597")
+        logger.debug("Searching for COM port with VID:0x2E8A and PID:0x000A")
         for port in availablePorts:
             logger.debug(f"{port.device}")
             logger.debug(f"\tProduct: {port.product}")
@@ -105,7 +105,7 @@ class FanCommander(SerialHardware):
             logger.debug(f"\tVID:{port.vid} PID:{port.pid}")
             logger.debug(f"\tLocation: {port.location}")
             logger.debug(f"\tInterface: {port.interface}")
-            if port.vid == 1155 and port.pid == 22336:
+            if port.vid == 0x2E8A and port.pid == 0x000A:
                 logger.debug("Using '{}' as Fan Controller COM port".format(port.description))
                 return port
         return None
