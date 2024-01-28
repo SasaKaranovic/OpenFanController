@@ -23,7 +23,7 @@ class ConfigReader:
 
     # Save current configuration to .yaml file
     def _save_config(self):
-        with open(self.config_path, 'w') as cfg_file:
+        with open(self.config_path, 'w', encoding="utf8") as cfg_file:
             yaml.dump(self.config, cfg_file, Dumper=yaml.RoundTripDumper)
 
     # Read .yaml config file
@@ -33,7 +33,7 @@ class ConfigReader:
             self._init_default_config()
             return False
 
-        with open(self.config_path, 'r') as file:
+        with open(self.config_path, 'r', encoding="utf8") as file:
             cfg = yaml.safe_load(file)
 
         if cfg is None:
