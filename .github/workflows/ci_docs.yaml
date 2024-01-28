@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'Documentation/src/*'
+      - '.github/workflows/ci_docs.yaml'
 
 permissions:
   contents: write
