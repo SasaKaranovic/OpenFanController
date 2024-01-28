@@ -6,7 +6,7 @@ on:
       - '**.py'
 
 jobs:
-  build:
+  pylint:
 
     runs-on: ubuntu-20.04
 
@@ -21,10 +21,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install pylint
         pip install pylint-exit
-        pip install -r requirements.txt
+        pip install -r Software/Python/requirements.txt
     - name: Run Pylint on code
       run: |
-        pylint --rc-file=pylintrc --disable=import-error $(git ls-files '*.py') || pylint-exit --error-fail $?
+        pylint --rc-file=Software/Python/pylintrc --disable=import-error $(git ls-files '*.py') || pylint-exit --error-fail $?
         if [ $? -ne 0 ]; then
           exit 1
         fi
