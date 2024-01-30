@@ -7,26 +7,47 @@
 
 Above video shows the finished 10 channel PC fan controller, how it works and motivation behind some of the design decisions.
 
-## How can I build my own?
+Some of the main features of the OpenFAN controller are:
 
-The above video explains the idea and how hardware and firmware works. It's recommended that you watch that first.
-Hardware and firmware build instructions and source files are available in their respective folders.
+- Individually control up to 10 fans
+- USB communication with the host PC
+- Has a built-in USB bootloader for smooth firmware upgrade experience
+- GUI to control and monitor fans. Accessible locally/remotely through web browser
+- Control fans by setting PWM percentage or target RPM
+- Supports virtually unlimited number of custom fan profiles that you can create and apply through GUI/API
+- Built in API interface for integration, (remote) monitoring or (remote) control.
+- Built using simple off-the-shelf components to make it hacker/diy friendly
+- Designed to be platform/OS agnostic and works on Windows, Linux and Mac
+- GUI/API can be deployed as Docker application
+- <a href="https://getfancontrol.com/" target="_blank">Fan Control</a> integration through <a href="https://github.com/SasaKaranovic/FanControl.OpenFan" target="_blank">FanControl.OpenFAN<a/> plugin (Windows)
+<br/><br/>
 
----
+## Can I buy OpenFAN controller
 
-## Can I buy OpenFAN
+Yes you can. It's available on the [web shop](https://shop.sasakaranovic.com/products/openfan-pc-fan-controller).
+<br/><br/>
 
-Yes you can! It's available on the [web shop](https://shop.sasakaranovic.com/products/openfan-pc-fan-controller).
+## Can I build my own?
+
+Yes you can. The above video explains the idea and how hardware and firmware works. It's recommended that you watch that first.
+
+Hardware, Firmware and Software build instructions and source files are available in this repository.
+<br/><br/>
 
 
----
+## What platforms are supported?
+
+OpenFAN is designed to be platform agnostic. This means you can use it on Windows, Linux and Mac.
+
+You can find more information on how to run OpenFAN software in the [software read me](Software)
+<br><br>
 
 Blog page: https://sasakaranovic.com/projects/openfan-controller/
 
 YouTube video: http://www.youtube.com/watch?v=C8tcsyASQRM
 
 
----
+<br/><br/>
 
 #### Sasa Karanovic
 
@@ -35,12 +56,4 @@ YouTube video: http://www.youtube.com/watch?v=C8tcsyASQRM
 <a href="https://github.com/sasakaranovic" target="_blank" title="Sasa Karanovic on GitHub"><img src="https://raw.githubusercontent.com/SasaKaranovic/common/master/assets/img_github.png" width="16"> GitHub</a> &nbsp;&middot;&nbsp;
 <a href="https://twitter.com/_sasakaranovic_" target="_blank" title="Sasa Karanovic on Twitter"><img src="https://raw.githubusercontent.com/SasaKaranovic/common/master/assets/img_twitter.png" width="16"> Twitter</a> &nbsp;&middot;&nbsp;
 <a href="https://instagram.com/_sasakaranovic_" target="_blank" title="Sasa Karanovic on Instagram"><img src="https://raw.githubusercontent.com/SasaKaranovic/common/master/assets/img_instagram.png" width="16"> Instagram</a> &nbsp;&middot;&nbsp;
-<a href="https://buymeacoffee.com/sasakaranovic" target="_blank" title="Sasa Karanovic on Buy me a coffee"><img src="https://raw.githubusercontent.com/SasaKaranovic/common/master/assets/img_coffee.png" width="16"> Buy me a coffee</a>
-
-
-[home]: https://raw.githubusercontent.com/SasaKaranovic/common/master/assets/img_home.png "Sasa Karanovic Home Page"
-[youtube]: https://raw.githubusercontent.com/SasaKaranovic/common/master/assets/img_youtube.png "Sasa Karanovic YouTube channel"
-[github]: https://raw.githubusercontent.com/SasaKaranovic/common/master/assets/img_github.png "Sasa Karanovic on GitHub"
-[twitter]: https://raw.githubusercontent.com/SasaKaranovic/common/master/assets/img_twitter.png "Sasa Karanovic on Twitter"
-[instagram]: https://raw.githubusercontent.com/SasaKaranovic/common/master/assets/img_instagram.png "Sasa Karanovic on Instagram"
-[coffee]: https://raw.githubusercontent.com/SasaKaranovic/common/master/assets/img_coffee.png "Buy me a coffee"
+<a href="https://github.com/sponsors/SasaKaranovic" target="_blank" title="Sponsor on GitHub"><img src="https://raw.githubusercontent.com/SasaKaranovic/common/master/assets/img_github.png" width="16"> Sponsor on GitHub</a>
