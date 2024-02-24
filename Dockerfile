@@ -5,6 +5,7 @@ FROM ubuntu:22.04
 LABEL maintainer="sasa@karanovic.ca"
 LABEL version="0.1"
 LABEL description="OpenFan Controller Web GUI and Server docker image"
+LABEL org.opencontainers.image.source=https://github.com/sasakaranovic/openfancontroller
 
 # Disable Prompt During Packages Installation
 ARG DEBIAN_FRONTEND=noninteractive
