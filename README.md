@@ -20,6 +20,8 @@ Some of the main features of the OpenFAN controller are:
 - Designed to be platform/OS agnostic and works on Windows, Linux and Mac
 - GUI/API can be deployed as Docker application
 - <a href="https://getfancontrol.com/" target="_blank">Fan Control</a> integration through <a href="https://github.com/SasaKaranovic/FanControl.OpenFan" target="_blank">FanControl.OpenFAN<a/> plugin (Windows)
+- <a href="https://unraid.net/community/apps?q=OpenFanController#r" target="_blank">Unraid</a> docker integration through <a href="https://unraid.net/community/apps?q=OpenFanController#r" target="_blank">OpenFanController<a/> application (Unraid)
+- <a href="https://github.com/SasaKaranovic/OpenFanController/pkgs/container/openfancontroller" target="_blank">Docker</a> image available (Docker)
 <br/><br/>
 
 ## Can I buy OpenFAN controller
