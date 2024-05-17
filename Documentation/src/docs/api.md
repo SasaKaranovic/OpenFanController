@@ -91,7 +91,7 @@ Use this function to set fan number `{fan}` to RPM value of `{rpm}`.
 
 !!! note annotate "Note"
 
-    Fan index must be a value from `1-10`
+    Fan index must be a value from `0-9`
 
     RPM value must be within `[500-9000]` range.
 
@@ -120,7 +120,7 @@ Use this function to set **PWM** of fan number `{fan}` to `{pwm}` percent.
 
 !!! note annotate "Note"
 
-    Fan index must be a value from `1-10`
+    Fan index must be a value from `0-9`
 
     RPM value must be within `[0-100]` range. Where 0 means off (or lowest speed possible) and 100 means fully on.
 
