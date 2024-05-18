@@ -112,7 +112,7 @@ Response is a JSON object
 ---
 
 
-## Fan Set PWM - `/api/v0/fan/{fan}/pwm?value={rpm}`
+## Fan Set PWM - `/api/v0/fan/{fan}/set?value={rpm}`
 
 Use this function to set **PWM** of fan number `{fan}` to `{pwm}` percent.
 
@@ -126,7 +126,7 @@ Use this function to set **PWM** of fan number `{fan}` to `{pwm}` percent.
 
 ### Example: Set fan #1 to 60% PMW:
 
-> `GET` - `http://localhost:3000/api/v0/fan/1/pwm?value=60`
+> `GET` - `http://localhost:3000/api/v0/fan/1/set?value=60`
 
 
 Response is a JSON object
