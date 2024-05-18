@@ -112,7 +112,7 @@ Response is a JSON object
 ---
 
 
-## Fan Set PWM - `/api/v0/fan/{fan}/set?value={rpm}`
+## Fan Set PWM - `/api/v0/fan/{fan}/set?value={pwm}`
 
 Use this function to set **PWM** of fan number `{fan}` to `{pwm}` percent.
 
