@@ -302,7 +302,7 @@ function radio_control_via_rpm_handler()
 {
     var control_via_rpm = $("#control_via_rpm").is(":checked")
 
-    if(control_via_rpm == 'rpm')
+    if(control_via_rpm === true)
     {
         $('label[for="control_via_rpm"]').text('Control in RPM (Revolutions Per Minute)');
         $("#fan_value").attr({
@@ -333,7 +333,7 @@ function update_value_slider()
     var extended_range = $("#unlock_range").is(":checked");
     var label;
 
-    if(use_rpm)
+    if(use_rpm === true)
     {
         if (fan_value <= 480)
         {
