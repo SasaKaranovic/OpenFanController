@@ -17,7 +17,7 @@ class ConfigReader:
                 'fan_profiles': default_fan_profiles
             }
 
-    def __init__(self, config_file='config.yaml'):
+    def __init__(self, config_file):
         self.config_path =  os.path.join(os.path.dirname(__file__), config_file)
         self._load_config()     # Load configuration from .yaml file
 

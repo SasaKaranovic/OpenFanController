@@ -205,7 +205,10 @@ class FileHandler(RequestHandler):
 class FAN_API_Service(Application):
     def __init__(self):
 
-        self.config = ConfigReader('config.yaml')
+        # OpenFAN config file (ie `config.yaml`) path can be set through `OPENFANCONFIG` environment variable
+        # or if it's not set, the default `config.yaml` from this directory will be used.
+        config_file = os.getenv('OPENFANCONFIG', default='config.yaml')
+        self.config = ConfigReader(config_file)
 
         # API service will look for OpenFAN serial port in the following order
         # 1. Check if `hardware->port` entry is specified in `config.yaml`
