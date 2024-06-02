@@ -1,5 +1,5 @@
-from serial_driver import SerialHardware
 from serial.tools.list_ports import comports
+from serial_driver import SerialHardware
 from base_logger import logger
 
 
@@ -94,7 +94,6 @@ class FanCommander(SerialHardware):
 
     @classmethod
     def find_fan_controller(cls):
-        dialPort = None
         availablePorts = comports()
         logger.debug("Searching for COM port with VID:0x2E8A and PID:0x000A")
         for port in availablePorts:
