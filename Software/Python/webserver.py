@@ -62,6 +62,7 @@ class FanProfile_Add(BaseHandler):
         profile_type = self.get_argument('type', None)
         profile_values_str = self.get_argument('values', None)
         error = False
+        message = ""
 
         if profile_name is None:
             error = True
