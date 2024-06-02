@@ -242,8 +242,9 @@ class FAN_API_Service(Application):
             (r"/api/v0/profiles/remove", FanProfile_Remove, {"handler":self.fan_commander, "config":self.config}),
             (r"/api/v0/profiles/set", FanProfile_Set, {"handler":self.fan_commander, "config":self.config}),
             (r"/api/v0/fan/status", FanStatus_Handler, {"handler":self.fan_commander, "config":self.config}),
-            (r"/api/v0/fan/([0-9])/set", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config}),
             (r"/api/v0/fan/all/set", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config}),
+            (r"/api/v0/fan/([0-9])/set", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config}),  # <--- Deprecated. Please use `/api/v0/fan/([0-9])/pwm`
+            (r"/api/v0/fan/([0-9])/pwm", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config}),
             (r"/api/v0/fan/([0-9])/rpm", FanSetRPM_Handler, {"handler":self.fan_commander, "config":self.config}),
             (r"/api/v0/info", Info_Handler, {"handler":self.fan_commander, "config":self.config}),
             (r"/", FileHandler),
