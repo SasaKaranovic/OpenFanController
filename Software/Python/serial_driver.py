@@ -5,7 +5,7 @@ import serial as _serial
 import serial.tools.list_ports as _lp
 import serial.tools.list_ports_common as _lpc
 from serial.tools.list_ports import comports
-from base_logger import *
+from base_logger import logger
 
 
 class SerialHardware(object):
@@ -83,7 +83,6 @@ class SerialHardware(object):
         return self.port_info.description
 
     def _find_port_by_name(self, port_info):
-        dialPort = None
         availablePorts = comports()
         logger.debug(f"Searching for COM port `{port_info}`")
         for port in availablePorts:
@@ -153,7 +152,8 @@ class SerialHardware(object):
         command = self.serialPrefix + command + self.serialSuffix
 
         if self.flush_on_write and self.port.in_waiting > 0:
-            logger.error("Warning: there were bytes in waiting when there should be none, they were discarded. port: \"{}\" description \"{}\"".format(self.port_info.name, self.description()))
+            logger.error("Warning: there were bytes in waiting when there should be none.")
+            logger.error(f"They were discarded. Port: `{self.port_info.name}` Description: `{self.description()}`")
 
         if self.flush_on_write:
             self.port.reset_input_buffer()

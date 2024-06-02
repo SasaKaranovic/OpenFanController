@@ -4,7 +4,6 @@ import signal
 import argparse
 import time
 from mimetypes import guess_type
-from tornado import gen
 from tornado.web import Application
 from tornado.web import RequestHandler
 from tornado.web import StaticFileHandler
@@ -53,16 +52,23 @@ class FanProfile_Add(BaseHandler):
         profile_name = self.get_argument('name', None)
         profile_type = self.get_argument('type', None)
         profile_values_str = self.get_argument('values', None)
+        error = False
 
         if profile_name is None:
-            return self.send_response(status='fail', message='Fan profile name can not be empty!', data=None)
+            error = True
+            message = 'Fan profile name can not be empty!'
         if profile_type is None:
-            return self.send_response(status='fail', message='Fan profile type can not be empty!', data=None)
+            error = True
+            message='Fan profile type can not be empty!'
         if profile_values_str is None:
-            return self.send_response(status='fail', message='Fan profile values can not be empty!', data=None)
+            error = True
+            message='Fan profile values can not be empty!'
         if profile_type.lower() != 'pwm' and profile_type.lower() != 'rpm':
-            return self.send_response(status='fail', message='Fan profile type can be either "pwm" or "rpm".', data=None)
+            error = True
+            message='Fan profile type can be either "pwm" or "rpm".'
 
+        if error:
+            return self.send_response(status='fail', message=message, data=None)
 
         fan_profile = profile_values_str.split(';')
         try:
@@ -166,12 +172,12 @@ class FanSetRPM_Handler(BaseHandler):
         return self.send_response(status='ok', message=f'Update queued. Fan:{fan_index} RPM:{value}', data=None)
 
 class Info_Handler(BaseHandler):
-    def get(self, fan_index=None):
+    def get(self):
 
         data = {}
         data['hardware'] = self.handler.get_hw_info()
         data['firmware'] = self.handler.get_hw_info()
-        data['software'] = "Version: 0.1\r\nBuild: 2023-09-29" #FIXME: This will be auto-generated
+        data['software'] = "Version: 0.2\r\nBuild: 2024-06-01"
 
         return self.send_response(status='ok', message='System information', data=data)
 
@@ -243,7 +249,8 @@ class FAN_API_Service(Application):
             (r"/api/v0/profiles/set", FanProfile_Set, {"handler":self.fan_commander, "config":self.config}),
             (r"/api/v0/fan/status", FanStatus_Handler, {"handler":self.fan_commander, "config":self.config}),
             (r"/api/v0/fan/all/set", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config}),
-            (r"/api/v0/fan/([0-9])/set", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config}),  # <--- Deprecated. Please use `/api/v0/fan/([0-9])/pwm`
+            # `/api/v0/fan/([0-9])/set` is now deprecated. Please use `/api/v0/fan/([0-9])/pwm`
+            (r"/api/v0/fan/([0-9])/set", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config}),
             (r"/api/v0/fan/([0-9])/pwm", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config}),
             (r"/api/v0/fan/([0-9])/rpm", FanSetRPM_Handler, {"handler":self.fan_commander, "config":self.config}),
             (r"/api/v0/info", Info_Handler, {"handler":self.fan_commander, "config":self.config}),
