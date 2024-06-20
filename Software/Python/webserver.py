@@ -40,7 +40,7 @@ class BaseHandler(RequestHandler):
                 return True
             return False
         except ValueError:
-            raise False
+            return False
 
 class RootHandler(BaseHandler):
     def get(self):
@@ -196,7 +196,7 @@ class FanSetRPM_Handler(BaseHandler):
 
 class FanAliasAll_Handler(BaseHandler):
     def get(self):
-        logger.info(f"Request:GET ALL FAN Aliases")
+        logger.info("Request:GET ALL FAN Aliases")
         aliases = self.config.get_fan_alias(-1)
         fan_data = {}
         for fan_index, alias in aliases.items():
@@ -222,9 +222,9 @@ class FanAliasSet_Handler(BaseHandler):
 
         value = self.get_argument('value', None)
         if value is None:
-            return self.send_response(status='fail', message=f'Fan alias can not be none!', data=None)
-        if re.search("^[a-z0-9\-_\.# ]*?$", value, re.MULTILINE | re.IGNORECASE) is None:
-            return self.send_response(status='fail', message=f'Fan alias can only contain `A-Z`, `0-9`, `-`, `_`, `#` and `<space>` characters!', data=None)
+            return self.send_response(status='fail', message='Fan alias can not be none!', data=None)
+        if re.search(r"^[a-z0-9\-_\.# ]*?$", value, re.MULTILINE | re.IGNORECASE) is None:
+            return self.send_response(status='fail', message='Fan alias can only contain `A-Z`, `0-9`, `-`, `_`, `#` and `<space>` characters!', data=None)
 
         # Fan index is specified
         fan_index = int(fan_index)
