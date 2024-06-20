@@ -103,7 +103,7 @@ class SerialHardware(object):
 
         if not status_re:
             regex = status_re
-        compiled_re = re.compile(regex, flags=re.IGNORECASE)
+        compiled_re = re.compile(regex, flags=re.IGNORECASE)    #pylint: disable=possibly-used-before-assignment
 
         timeout_timestmap = time.time() + timeout
         while time.time() <= timeout_timestmap:
@@ -198,7 +198,7 @@ class SerialHardware(object):
             if not ignore_response:
                 rx_lines = self.read_until_response()
 
-            lines = rx_lines + lines
+            lines = rx_lines + lines    #pylint: disable=possibly-used-before-assignment
 
             return lines
         finally:
