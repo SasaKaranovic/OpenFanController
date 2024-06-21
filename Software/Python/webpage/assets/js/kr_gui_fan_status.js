@@ -76,6 +76,16 @@ $(function() {
 
     });
 
+    $(".fan-name").on("dblclick", function(e) {
+        var id = $(this).attr('id');
+        id = id.replace("fan-", "");
+        id = id.replace("-name", "");
+        rename_device(id);
+    } );
+
+
+
+    gui_update_fan_aliases();
 
     // Periodic fan RPM update
     const interval = setInterval(function() {
@@ -84,8 +94,31 @@ $(function() {
 });
 
 
-function gui_new_profile_adjust_range()
+function rename_device(fan_index)
 {
+    var default_name = "Fan #"+ (parseInt(fan_index)+1)
+    let name = prompt("New name for this device (A-Z, 0-9, -, _ and spaces allowed)", default_name);
+    var hitCancel = !(name != "" && name !== null);
+
+    if (hitCancel)
+    {
+        return;
+    }
+
+    name = encodeURIComponent(name)
+    var url = '/api/v0/alias/'+ fan_index +'/set?value='+name;
+
+    console.log("New name: "+ name);
+    console.log("Sending request to: "+ url);
+    var jqxhr = $.get( url, function() {
+    })
+      .done(function(e) {
+        gui_update_fan_aliases();
+      })
+      .fail(function(e) {
+        console.log(e);
+        alert("Failed to update fan name. Please check console for detailed error.");
+      });
 
 }
 
@@ -296,6 +329,34 @@ function update_fan(fan, value)
         console.log(e);
       });
 
+}
+
+
+function gui_update_fan_aliases()
+{
+    var url = '/api/v0/alias/all/get';
+    var jqxhr = $.getJSON(url, function() {
+    })
+      .done(function(e) {
+        const rpm = Object.values(e['data']);
+
+        rpm.forEach(function (value, index) {
+            $("#fan-"+ index +"-name").text(value);
+        });
+
+      })
+      .fail(function(e) {
+        $("#fan_0_name").text('ERR');
+        $("#fan_1_name").text('ERR');
+        $("#fan_2_name").text('ERR');
+        $("#fan_3_name").text('ERR');
+        $("#fan_4_name").text('ERR');
+        $("#fan_5_name").text('ERR');
+        $("#fan_6_name").text('ERR');
+        $("#fan_7_name").text('ERR');
+        $("#fan_8_name").text('ERR');
+        $("#fan_9_name").text('ERR');
+      });
 }
 
 function radio_control_via_rpm_handler()

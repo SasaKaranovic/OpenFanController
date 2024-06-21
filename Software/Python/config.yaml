@@ -32,6 +32,7 @@ fan_profiles:
     - 100
     - 100
     - 100
+    name: MadMax
   1200RPM:
     type: RPM
     values:
@@ -45,3 +46,15 @@ fan_profiles:
     - 1200
     - 1200
     - 1200
+    name: 1200RPM
+fan_aliases:
+  0: 'Fan #1'
+  1: 'Fan #2'
+  2: 'Fan #3'
+  3: 'Fan #4'
+  4: 'Fan #5'
+  5: 'Fan #6'
+  6: 'Fan #7'
+  7: 'Fan #8'
+  8: 'Fan #9'
+  9: 'Fan #10'

@@ -11,13 +11,16 @@ class ConfigReader:
                             '100% PWM' : { 'type': 'pwm', 'values': [100,100,100,100,100,100,100,100,100,100] },
                             '1000 RPM': { 'type': 'rpm', 'values': [1000,1000,1000,1000,1000,1000,1000,1000,1000,1000] },
                             }
+    default_fan_aliases = {   0:'Fan #1', 1:'Fan #2', 2:'Fan #3', 3:'Fan #4', 4:'Fan #5',
+                            5:'Fan #6', 6:'Fan #7', 7:'Fan #8', 8:'Fan #9', 9:'Fan #10' }
     config = {
                 'server': defualt_server,
                 'hardware': defualt_hardware,
-                'fan_profiles': default_fan_profiles
+                'fan_profiles': default_fan_profiles,
+                'fan_aliases': default_fan_aliases
             }
 
-    def __init__(self, config_file='config.yaml'):
+    def __init__(self, config_file):
         self.config_path =  os.path.join(os.path.dirname(__file__), config_file)
         self._load_config()     # Load configuration from .yaml file
 
@@ -76,6 +79,18 @@ class ConfigReader:
             self.config['fan_profiles'] = server_fp
             logger.debug(server_fp)
 
+
+        logger.debug("Fan aliases:")
+        fan_aliases = cfg.get('fan_aliases', False)
+        if fan_aliases is False:
+            self.config['fan_aliases'] = self.default_fan_aliases
+            config_data_missing = True
+            logger.debug("Fan aliases missing from config file. Adding default values...")
+            logger.debug(self.default_fan_aliases)
+        else:
+            self.config['fan_aliases'] = fan_aliases
+            logger.debug(fan_aliases)
+
         if config_data_missing:
             self._save_config()
 
@@ -92,6 +107,7 @@ class ConfigReader:
         logger.debug(f"\t Port: {self.config['server']['port']}")
         logger.debug(f"\t Serial Timeout: {self.config['server']['communication_timeout']}")
         logger.debug(f"\t Fan Profiles: {self.config['fan_profiles']}")
+        logger.debug(f"\t Fan Aliases: {self.config['fan_aliases']}")
         logger.debug("--------------------")
 
     def get_server_config(self):
@@ -133,3 +149,19 @@ class ConfigReader:
             return True
         logger.info(f"Profile `{profile_name}` does not exist.")
         return False
+
+    def get_fan_alias(self, fan_index=-1):
+        try:
+            if fan_index == -1:
+                return self.config['fan_aliases']
+            return self.config['fan_aliases'][fan_index]
+        except KeyError:
+            return f"Fan #{fan_index+1}"
+
+    def set_fan_alias(self, fan_index, alias):
+        try:
+            self.config['fan_aliases'][fan_index] = alias
+            self._save_config()
+            return True
+        except KeyError:
+            return False

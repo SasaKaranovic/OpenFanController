@@ -22,7 +22,7 @@ def colorize(data, color):
               'white': "1;37"}
 
     if color not in colors:
-        raise Exception("No such color: {}".format(color))
+        raise KeyError("No such color: {}".format(color))
 
     start = '\033[{}m'.format(colors[color])
     end = '\033[{}m'.format(colors['none'])
@@ -65,9 +65,6 @@ def set_logger_level(level='info'):
         logger.setLevel(logging.INFO)
         logger.info("Logging level: INFO")
 
-'''
-    Shared stdout logger and logging to file
-'''
 # Basic logger setup
 log_formatter = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s')
 

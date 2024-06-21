@@ -3,8 +3,8 @@ import os
 import signal
 import argparse
 import time
+import re
 from mimetypes import guess_type
-from tornado import gen
 from tornado.web import Application
 from tornado.web import RequestHandler
 from tornado.web import StaticFileHandler
@@ -34,6 +34,14 @@ class BaseHandler(RequestHandler):
         self.set_header('Access-Control-Allow-Methods', 'POST, GET')
         self.set_header('Content-Type', 'application/json')
 
+    def is_valid_fan_index(self, index):
+        try:
+            if int(index) >=0 and int(index) <= 9:
+                return True
+            return False
+        except ValueError:
+            return False
+
 class RootHandler(BaseHandler):
     def get(self):
         logger.debug("Root handler")
@@ -53,16 +61,24 @@ class FanProfile_Add(BaseHandler):
         profile_name = self.get_argument('name', None)
         profile_type = self.get_argument('type', None)
         profile_values_str = self.get_argument('values', None)
+        error = False
+        message = ""
 
         if profile_name is None:
-            return self.send_response(status='fail', message='Fan profile name can not be empty!', data=None)
+            error = True
+            message = 'Fan profile name can not be empty!'
         if profile_type is None:
-            return self.send_response(status='fail', message='Fan profile type can not be empty!', data=None)
+            error = True
+            message='Fan profile type can not be empty!'
         if profile_values_str is None:
-            return self.send_response(status='fail', message='Fan profile values can not be empty!', data=None)
+            error = True
+            message='Fan profile values can not be empty!'
         if profile_type.lower() != 'pwm' and profile_type.lower() != 'rpm':
-            return self.send_response(status='fail', message='Fan profile type can be either "pwm" or "rpm".', data=None)
+            error = True
+            message='Fan profile type can be either "pwm" or "rpm".'
 
+        if error:
+            return self.send_response(status='fail', message=message, data=None)
 
         fan_profile = profile_values_str.split(';')
         try:
@@ -131,8 +147,8 @@ class FanStatus_Handler(BaseHandler):
         rpm = self.handler.get_all_fan_rpm()
         return self.send_response(status='ok', message='', data=rpm)
 
-class FanSetPWM_Handler(BaseHandler):
-    def get(self, fan_index=None):
+class FanSetALLPWM(BaseHandler):
+    def get(self):
         value = self.get_argument('value', 0)
         value = int(float(value))
         if value > 100:
@@ -140,19 +156,32 @@ class FanSetPWM_Handler(BaseHandler):
         elif value < 0:
             value = 0
 
-        # Fan index is specified
-        if fan_index:
-            fan_index = int(fan_index)
-            logger.info(f"Request:SET - FAN:{fan_index} To:{value}% ({value})")
-            self.handler.set_fan_pwm(fan_index, value)
-            return self.send_response(status='ok', message=f'Update queued. Setting fan #{fan_index} to PWM:{value}%', data=None)
-
         logger.info(f"Request:SET - FAN: ALL To:{value}%")
         self.handler.set_all_fan_pwm(value)
         return self.send_response(status='ok', message=f'Update queued. Setting ALL fans to PWM:{value}%', data=None)
 
+class FanSetPWM_Handler(BaseHandler):
+    def get(self, fan_index=-1):
+        if not self.is_valid_fan_index(fan_index):
+            return self.send_response(status='fail', message=f'Invalid fan index (0<=`{fan_index}`<=9)', data=None)
+
+        value = self.get_argument('value', 0)
+        value = int(float(value))
+        if value > 100:
+            value = 100
+        elif value < 0:
+            value = 0
+
+        fan_index = int(fan_index)
+        logger.info(f"Request:SET - FAN:{fan_index} To:{value}% ({value})")
+        self.handler.set_fan_pwm(fan_index, value)
+        return self.send_response(status='ok', message=f'Update queued. Setting fan #{fan_index} to PWM:{value}%', data=None)
+
 class FanSetRPM_Handler(BaseHandler):
-    def get(self, fan_index=None):
+    def get(self, fan_index=-1):
+        if not self.is_valid_fan_index(fan_index):
+            return self.send_response(status='fail', message=f'Invalid fan index (0<=`{fan_index}`<=9)', data=None)
+
         value = int(self.get_argument('value', 0))
         if value > 16000:
             value = 16000
@@ -165,13 +194,52 @@ class FanSetRPM_Handler(BaseHandler):
         self.handler.set_fan_rpm(fan_index, value)
         return self.send_response(status='ok', message=f'Update queued. Fan:{fan_index} RPM:{value}', data=None)
 
+class FanAliasAll_Handler(BaseHandler):
+    def get(self):
+        logger.info("Request:GET ALL FAN Aliases")
+        aliases = self.config.get_fan_alias(-1)
+        fan_data = {}
+        for fan_index, alias in aliases.items():
+            fan_data[fan_index] = alias
+
+        return self.send_response(status='ok', message='', data=fan_data)
+
+class FanAliasGet_Handler(BaseHandler):
+    def get(self, fan_index=-1):
+        if not self.is_valid_fan_index(fan_index):
+            return self.send_response(status='fail', message=f'Invalid fan index (0<=`{fan_index}`<=9)', data=None)
+
+        # Fan index is specified
+        fan_index = int(fan_index)
+        logger.info(f"Request:GET FAN Alias - FAN:{fan_index}")
+        fan_data = { 'fan_id': fan_index, 'alias': self.config.get_fan_alias(fan_index)}
+        return self.send_response(status='ok', message='', data=fan_data)
+
+class FanAliasSet_Handler(BaseHandler):
+    def get(self, fan_index=-1):
+        if not self.is_valid_fan_index(fan_index):
+            return self.send_response(status='fail', message=f'Invalid fan index (0<=`{fan_index}`<=9)', data=None)
+
+        value = self.get_argument('value', None)
+        if value is None:
+            return self.send_response(status='fail', message='Fan alias can not be none!', data=None)
+        if re.search(r"^[a-z0-9\-_\.# ]*?$", value, re.MULTILINE | re.IGNORECASE) is None:
+            return self.send_response(status='fail', message='Fan alias can only contain `A-Z`, `0-9`, `-`, `_`, `#` and `<space>` characters!', data=None)
+
+        # Fan index is specified
+        fan_index = int(fan_index)
+        logger.info(f"Request:SET FAN #{fan_index} alias to: `{value}`")
+        if self.config.set_fan_alias(fan_index, value):
+            return self.send_response(status='ok', message=f'Fan #{fan_index} alias set to:`{value}`', data=None)
+        return self.send_response(status='fail', message=f'Failed to set fan alias. (`{fan_index}:{value}`)', data=None)
+
 class Info_Handler(BaseHandler):
-    def get(self, fan_index=None):
+    def get(self):
 
         data = {}
         data['hardware'] = self.handler.get_hw_info()
         data['firmware'] = self.handler.get_hw_info()
-        data['software'] = "Version: 0.1\r\nBuild: 2023-09-29" #FIXME: This will be auto-generated
+        data['software'] = "Version: 0.2\r\nBuild: 2024-06-01"
 
         return self.send_response(status='ok', message='System information', data=data)
 
@@ -205,7 +273,10 @@ class FileHandler(RequestHandler):
 class FAN_API_Service(Application):
     def __init__(self):
 
-        self.config = ConfigReader('config.yaml')
+        # OpenFAN config file (ie `config.yaml`) path can be set through `OPENFANCONFIG` environment variable
+        # or if it's not set, the default `config.yaml` from this directory will be used.
+        config_file = os.getenv('OPENFANCONFIG', default='config.yaml')
+        self.config = ConfigReader(config_file)
 
         # API service will look for OpenFAN serial port in the following order
         # 1. Check if `hardware->port` entry is specified in `config.yaml`
@@ -239,9 +310,14 @@ class FAN_API_Service(Application):
             (r"/api/v0/profiles/remove", FanProfile_Remove, {"handler":self.fan_commander, "config":self.config}),
             (r"/api/v0/profiles/set", FanProfile_Set, {"handler":self.fan_commander, "config":self.config}),
             (r"/api/v0/fan/status", FanStatus_Handler, {"handler":self.fan_commander, "config":self.config}),
+            (r"/api/v0/fan/all/set", FanSetALLPWM, {"handler":self.fan_commander, "config":self.config}),
+            # `/api/v0/fan/([0-9])/set` is now deprecated. Please use `/api/v0/fan/([0-9])/pwm`
             (r"/api/v0/fan/([0-9])/set", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config}),
-            (r"/api/v0/fan/all/set", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config}),
+            (r"/api/v0/fan/([0-9])/pwm", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config}),
             (r"/api/v0/fan/([0-9])/rpm", FanSetRPM_Handler, {"handler":self.fan_commander, "config":self.config}),
+            (r"/api/v0/alias/all/get", FanAliasAll_Handler, {"handler":self.fan_commander, "config":self.config}),
+            (r"/api/v0/alias/([0-9])/get", FanAliasGet_Handler, {"handler":self.fan_commander, "config":self.config}),
+            (r"/api/v0/alias/([0-9])/set", FanAliasSet_Handler, {"handler":self.fan_commander, "config":self.config}),
             (r"/api/v0/info", Info_Handler, {"handler":self.fan_commander, "config":self.config}),
             (r"/", FileHandler),
             (r'/(.*)', StaticFileHandler, {'path': WEBPAGE_ROOT}),
