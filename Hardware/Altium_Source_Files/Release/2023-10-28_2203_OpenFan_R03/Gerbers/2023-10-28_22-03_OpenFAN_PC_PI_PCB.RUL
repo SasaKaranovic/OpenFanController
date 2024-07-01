@@ -1,0 +1,6 @@
+DRC Rules Export File for PCB: C:\Users\Sasa\Desktop\git\_public_sk_repos\OpenFanController\Hardware\Altium_Source_Files\OpenFAN_Base_Pi2040.PcbDoc
+RuleKind=Clearance|RuleName=Clearance_1|Scope=Board|Minimum=11.81
+RuleKind=SolderMaskExpansion|RuleName=SolderMaskExpansion|Scope=Board|Minimum=4.00
+RuleKind=Width|RuleName=Width|Scope=Board|Minimum=6.06
+RuleKind=Clearance|RuleName=Clearance|Scope=Board|Minimum=5.00
+RuleKind=ShortCircuit|RuleName=ShortCircuit|Scope=Board|Allowed=0
