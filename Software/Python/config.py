@@ -4,8 +4,8 @@ from base_logger import logger
 
 class ConfigReader:
     config_path = None
-    defualt_server = { 'hostname': 'localhost', 'port': 3000, 'communication_timeout': 1 }
-    defualt_hardware = { 'hostname': 'localhost', 'port': 3000, 'communication_timeout': 1 }
+    default_server = { 'hostname': 'localhost', 'port': 3000, 'communication_timeout': 1 }
+    default_hardware = { 'hostname': 'localhost', 'port': 3000, 'communication_timeout': 1 }
     default_fan_profiles = {
                             '50% PWM' : { 'type': 'pwm', 'values': [50,50,50,50,50,50,50,50,50,50] },
                             '100% PWM' : { 'type': 'pwm', 'values': [100,100,100,100,100,100,100,100,100,100] },
@@ -14,8 +14,8 @@ class ConfigReader:
     default_fan_aliases = {   0:'Fan #1', 1:'Fan #2', 2:'Fan #3', 3:'Fan #4', 4:'Fan #5',
                             5:'Fan #6', 6:'Fan #7', 7:'Fan #8', 8:'Fan #9', 9:'Fan #10' }
     config = {
-                'server': defualt_server,
-                'hardware': defualt_hardware,
+                'server': default_server,
+                'hardware': default_hardware,
                 'fan_profiles': default_fan_profiles,
                 'fan_aliases': default_fan_aliases
             }
@@ -49,9 +49,9 @@ class ConfigReader:
         logger.debug("Server config:")
         server_cfg = cfg.get('server', False)
         if server_cfg is False:
-            self.config['server'] = self.defualt_server
+            self.config['server'] = self.default_server
             logger.debug("Server config missing from config file. Adding default values...")
-            logger.debug(self.defualt_server)
+            logger.debug(self.default_server)
             config_data_missing = True
         else:
             self.config['server'] = server_cfg
@@ -60,10 +60,10 @@ class ConfigReader:
         logger.debug("Hardware config:")
         server_hw = cfg.get('hardware', False)
         if server_hw is False:
-            self.config['hardware'] = self.defualt_hardware
+            self.config['hardware'] = self.default_hardware
             config_data_missing = True
             logger.debug("Hardware config missing from config file. Adding default values...")
-            logger.debug(self.defualt_hardware)
+            logger.debug(self.default_hardware)
         else:
             self.config['hardware'] = server_hw
             logger.debug(server_hw)
