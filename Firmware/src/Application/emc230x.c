@@ -280,7 +280,7 @@ static bool emc230x_send(uint8_t *pData, uint16_t nLen)
 {
     int status;
     status = i2c_write_timeout_us(PICO_I2C_INSTANCE, i2c_address, pData, nLen, false, I2C_COMM_TIMEOUT);
-    if(status)
+    if(status < 0)
     {
         Logger_ERROR("%s: Error 0x%02X", __FUNCTION__, status);
         return false;
@@ -293,7 +293,7 @@ static bool emc230x_read(uint8_t *pData, uint16_t nLen)
 {
     int status;
     status = i2c_read_timeout_us(PICO_I2C_INSTANCE, i2c_address, pData, nLen, false, I2C_COMM_TIMEOUT);
-    if(status)
+    if(status < 0)
     {
         Logger_ERROR("%s: Error 0x%02X", __FUNCTION__, status);
         return false;
@@ -305,14 +305,14 @@ static bool emc230x_send_then_read(uint8_t *pTXData, uint16_t nTXLen, uint8_t *p
 {
     int status;
     status = i2c_write_timeout_us(PICO_I2C_INSTANCE, i2c_address, pTXData, nTXLen, false, I2C_COMM_TIMEOUT);
-    if(status)
+    if(status < 0)
     {
         Logger_ERROR("%s: write error 0x%02X", __FUNCTION__, status);
         return false;
     }
 
     status = i2c_read_timeout_us(PICO_I2C_INSTANCE, i2c_address, pRXData, nRXLen, false, I2C_COMM_TIMEOUT);
-    if(status)
+    if(status < 0)
     {
         Logger_ERROR("%s: read error 0x%02X", __FUNCTION__, status);
         return false;
