@@ -1,0 +1,91 @@
+name: Build and release firmware
+
+# Runs whenever firmware source changes are pushed to master, and can also
+# be triggered manually from the Actions tab (e.g. to re-cut a release).
+on:
+  push:
+    branches: ['master']
+    paths:
+      - 'Firmware/src/**'
+      - '.github/workflows/firmware_release.yaml'
+  workflow_dispatch:
+
+env:
+  # Pin the Pico SDK version used to build the firmware so builds are reproducible.
+  PICO_SDK_VERSION: '2.3.0'
+
+permissions:
+  contents: write   # required so the workflow can create a release and upload assets
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout OpenFanController
+        uses: actions/checkout@v4
+
+      - name: Checkout Pico SDK
+        uses: actions/checkout@v4
+        with:
+          repository: raspberrypi/pico-sdk
+          ref: ${{ env.PICO_SDK_VERSION }}
+          submodules: recursive
+          path: pico-sdk
+
+      - name: Cache Pico SDK
+        uses: actions/cache@v4
+        with:
+          path: pico-sdk
+          key: pico-sdk-${{ env.PICO_SDK_VERSION }}
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            build-essential \
+            gcc-arm-none-eabi \
+            libnewlib-arm-none-eabi \
+            libstdc++-arm-none-eabi-newlib
+
+      - name: Configure firmware build
+        working-directory: Firmware/src
+        env:
+          PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
+        run: cmake -B build -S .
+
+      - name: Build firmware
+        working-directory: Firmware/src
+        env:
+          PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
+        run: cmake --build build -j"$(nproc)"
+
+      - name: Locate .uf2 artifact
+        id: artifact
+        working-directory: Firmware/src
+        run: |
+          UF2_FILE=$(find build -maxdepth 1 -name '*.uf2' | head -n1)
+          if [ -z "$UF2_FILE" ]; then
+            echo "No .uf2 file produced by the build" >&2
+            exit 1
+          fi
+          echo "path=Firmware/src/$UF2_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-uf2
+          path: ${{ steps.artifact.outputs.path }}
+
+      - name: Set release version
+        id: version
+        run: echo "tag=$(date -u +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: OpenFAN Firmware ${{ steps.version.outputs.tag }}
+          body: |
+            Automated firmware build from commit ${{ github.sha }}.
+          files: ${{ steps.artifact.outputs.path }}
