@@ -5,13 +5,18 @@
 
 OpenFAN Controller supports loading new firmware over USB.
 
-Latest firmware release is stored in `Release Binaries` folder. Download the latest firmware version to your PC.
+Latest firmware is compiled through GitHub action and published under [releases](https://github.com/SasaKaranovic/OpenFanController/releases). Download the latest firmware version to your PC.
 
-- Put your OpenFAN Controller into a bootloader mode.
-- OpenFAN Controller will appear as a USB mass storage device on your PC.
-- Copy the `.uf2` file to the OpenFAN Controller drive.
-- After a few seconds, the mass storage device will disconnect and OpenFAN Controller COM port should appear.
-- Your OpenFAN controller is ready to go.
+To load the latest firmware onto your board, follow the below steps:
+
+1. Disconnect all fans and power from the board
+2. Hold the BOOT button
+3. Connect USB-C cable to OpenFAN
+4. You should see a new USB drive on your PC
+5. Drag and drop (or copy-paste) the OpenFAN firmware
+6. Within few seconds, the drive will disappear and you should see the white LED on the OpenFAN blinking
+7. The board should be flashed and ready to go now
+8. As a precaution and just to be 100% sure, you should power cycle the OpenFAN before using it.
 
 
 ## How to build firmware?
@@ -23,13 +28,5 @@ In order to build the firmware, you will need to install and setup Pico-SDK firs
 - `cmake -B {path-to-pico-sdk-directory} -S {path-to-OpenFAN-firmware-src-directory}`
 - `cmake -C build`
 
-If everything runs succesfully, you should see a `build` folder and inside there should be a `.uf2` file that you can use for firmware upgrade.
+If everything runs successfully, you should see a `build` folder and inside there should be a `.uf2` file that you can use for firmware upgrade.
 
-
-## GitHub Release
-
-Not everyone wants to build the firmware from scratch, most people just want to get the OpenFAN running, and that's cool.
-
-Once the project is publicly released, we will use a GitHub actions to automatically generate new firmware binaries (`.uf2` files) whenever there is a new version of the firmware.
-
-These binaries can then be downloaded and used for firmware upload.
