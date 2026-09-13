@@ -36,6 +36,10 @@ Yes you can. The above video explains the idea and how hardware and firmware wor
 Hardware, Firmware and Software build instructions and source files are available in this repository.
 <br/><br/>
 
+## Is there documentation?
+
+Documentation for OpenFAN Controller (and other projects) can be found at the official [docs page](https://docs.sasakaranovic.com/openfan/).
+<br/><br/>
 
 ## What platforms are supported?
 
