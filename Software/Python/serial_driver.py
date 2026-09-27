@@ -20,6 +20,7 @@ class SerialHardware(object):
 
         # If port is string, find port by name
         if isinstance(port_info, str):
+            logger.debug("COM port specified as string. Searching for instance...")
             self.port_info = self._find_port_by_name(port_info)
         else:
             self.port_info = port_info
@@ -138,12 +139,20 @@ class SerialHardware(object):
             if line:
                 if self.debug_uart:
                     logger.debug(line)
-                rx_lines.append(line)
                 if line.startswith('<'):
+                    rx_lines.append(line)
                     break
             if time.time() > timeout_timestmap:
                 logger.error(f"Timeout occured ({time.time()} > {timeout_timestmap})")
                 break
+
+        # Read any remaining lines and decode into string
+        try:
+            remaining_lines = self.port.read_all().splitlines()
+            for line in remaining_lines:
+                rx_lines.append(line.decode("utf-8").strip())
+        except Exception as e:
+            pass
 
         return rx_lines
 
@@ -189,8 +198,8 @@ class SerialHardware(object):
                 raise TypeError("Serial_transaction expects str/bytes/bytearray")
 
             # Check if any messages were received
-            while self.port.in_waiting:
-                lines.append(self.handle_serial_read())
+            # while self.port.in_waiting:
+                # lines.append(self.handle_serial_read())
 
             if not self.handle_serial_send(payload):
                 raise _serial.SerialException("Failed to send {}".format(payload))
