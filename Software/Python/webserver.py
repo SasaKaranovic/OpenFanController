@@ -29,9 +29,18 @@ class BaseHandler(RequestHandler):
         self.config = config
         self.board = board
         self.limit_fan_index_min = 0
-        self.limit_fan_index_max = min(self.board.get_fan_count()-1, 0)
+        self.limit_fan_index_max = max(self.board.get_fan_count()-1, 0)
         self.limit_temp_index_min = 0
-        self.limit_temp_index_max = min(self.board.get_sensor_count()-1, 0)
+        self.limit_temp_index_max = max(self.board.get_sensor_count()-1, 0)
+
+    def get_int_argument(self, name, default=0):
+        try:
+            return int(float(self.get_argument(name, default)))
+        except (TypeError, ValueError):
+            return None
+
+    def send_error_invalid_value(self):
+        return self.send_response(status='error', message='`value` must be a number!', data=None)
 
     def send_response(self, status, message='', data=None):
         self.write({'status': status, 'message': message, 'data': data})
@@ -109,7 +118,7 @@ class FanProfile_Add(BaseHandler):
                 message='Fan profile values can not be empty!'
             if profile_type.lower() != 'pwm' and profile_type.lower() != 'rpm':
                 error = True
-            message='Fan profile type can be either "pwm" or "rpm".'
+                message='Fan profile type can be either "pwm" or "rpm".'
         except Exception as e:
             logger.error(e)
             error = True
@@ -188,9 +197,9 @@ class TemperatureSensor_Handler(BaseHandler):
             return self.send_error_no_temperature_sensor_support()
 
         if not self.is_valid_temperature_index(sensor_index):
-            return self.send_response(status='error', message=f'Invalid temperature index (0<=`{sensor_index}`<=3)', data=None)
+            return self.send_response(status='error', message=f'Invalid temperature index ({self.limit_temp_index_min}<=`{sensor_index}`<={self.limit_temp_index_max})', data=None)
 
-        temperature = self.handler.get_temperature(sensor_index)
+        temperature = self.handler.get_temperature(int(sensor_index))
         return self.send_response(status='ok', message='', data=temperature)
 
 class TemperatureSensorAll_Handler(BaseHandler):
@@ -211,8 +220,9 @@ class FanStatus_Handler(BaseHandler):
 
 class FanSetALLPWM(BaseHandler):
     def get(self):
-        value = self.get_argument('value', 0)
-        value = int(float(value))
+        value = self.get_int_argument('value', 0)
+        if value is None:
+            return self.send_error_invalid_value()
         if value > 100:
             value = 100
         elif value < 0:
@@ -227,8 +237,9 @@ class FanSetPWM_Handler(BaseHandler):
         if not self.is_valid_fan_index(fan_index):
             return self.send_response(status='error', message=f'Invalid fan index ({self.limit_fan_index_min}<=`{fan_index}`<={self.limit_fan_index_max})', data=None)
 
-        value = self.get_argument('value', 0)
-        value = int(float(value))
+        value = self.get_int_argument('value', 0)
+        if value is None:
+            return self.send_error_invalid_value()
         if value > 100:
             value = 100
         elif value < 0:
@@ -247,7 +258,9 @@ class FanSetRPM_Handler(BaseHandler):
         if not self.is_valid_fan_index(fan_index):
             return self.send_response(status='error', message=f'Invalid fan index ({self.limit_fan_index_min}<=`{fan_index}`<={self.limit_fan_index_max})', data=None)
 
-        value = int(self.get_argument('value', 0))
+        value = self.get_int_argument('value', 0)
+        if value is None:
+            return self.send_error_invalid_value()
         if value > 16000:
             value = 16000
         elif value < 480:
