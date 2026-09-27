@@ -15,9 +15,9 @@
 #   smoke, html, fan_control, profiles, aliases, sensors
 
 defaults:
-  safe_pwm: 100                 # PWM % every fan is set to before and after a run
+  safe_pwm: 0                 # PWM % every fan is set to before and after a run
   timing:
-    settle_s: 15                # max time to wait for fan RPM to reach a new value
+    settle_s: 5                # max time to wait for fan RPM to reach a new value
     poll_s: 0.5                 # how often to poll while waiting
     test_timeout_s: 180         # per-test timeout (needs pytest-timeout)
   rpm:

@@ -5,7 +5,7 @@ from harness import assert_error
 
 pytestmark = [pytest.mark.sensors, pytest.mark.requires("temperature")]
 
-PLAUSIBLE_RANGE_C = (-20.0, 100.0)
+PLAUSIBLE_RANGE_C = (20.0, 40.0)
 
 
 def test_read_all_sensors(api, device, expect):
