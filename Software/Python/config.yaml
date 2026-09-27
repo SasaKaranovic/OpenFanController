@@ -3,8 +3,37 @@ server:
   port: 3000
   communication_timeout: 1
 hardware:
-  port:
+  port: COM12
+  communication_timeout: 1
 fan_profiles:
+  50% PWM:
+    type: pwm
+    values:
+    - 50
+    - 50
+    - 50
+    - 50
+    - 50
+    - 50
+    - 50
+    - 50
+    - 50
+    - 50
+    name: 50% PWM
+  100% PWM:
+    type: pwm
+    values:
+    - 100
+    - 100
+    - 100
+    - 100
+    - 100
+    - 100
+    - 100
+    - 100
+    - 100
+    - 100
+    name: 100% PWM
   1000 RPM:
     type: rpm
     values:
@@ -19,34 +48,33 @@ fan_profiles:
     - 1000
     - 1000
     name: 1000 RPM
-  MadMax:
-    type: PWM
-    values:
-    - 100
-    - 100
-    - 100
-    - 100
-    - 100
-    - 100
-    - 100
-    - 100
-    - 100
-    - 100
-    name: MadMax
-  1200RPM:
+  Test:
     type: RPM
     values:
-    - 1200
-    - 1200
-    - 1200
-    - 1200
-    - 1200
-    - 1200
-    - 1200
-    - 1200
-    - 1200
-    - 1200
-    name: 1200RPM
+    - 1000
+    - 1000
+    - 1000
+    - 1000
+    - 1000
+    - 1000
+    - 1000
+    - 1000
+    - 1000
+    - 1000
+    name: Test
+  Test2:
+    type: PWM
+    values:
+    - 50
+    - 50
+    - 50
+    - 50
+    - 50
+    - 50
+    - 50
+    - 50
+    - 50
+    - 50
 fan_aliases:
   0: 'Fan #1'
   1: 'Fan #2'
