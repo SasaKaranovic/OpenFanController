@@ -1,4 +1,5 @@
 import os
+import copy
 from ruamel import yaml
 from base_logger import logger
 
@@ -13,15 +14,15 @@ class ConfigReader:
                             }
     default_fan_aliases = {   0:'Fan #1', 1:'Fan #2', 2:'Fan #3', 3:'Fan #4', 4:'Fan #5',
                             5:'Fan #6', 6:'Fan #7', 7:'Fan #8', 8:'Fan #9', 9:'Fan #10' }
-    config = {
-                'server': defualt_server,
-                'hardware': defualt_hardware,
-                'fan_profiles': default_fan_profiles,
-                'fan_aliases': default_fan_aliases
-            }
 
     def __init__(self, config_file):
         self.config_path =  os.path.join(os.path.dirname(__file__), config_file)
+        self.config = {
+            'server': copy.deepcopy(self.defualt_server),
+            'hardware': copy.deepcopy(self.defualt_hardware),
+            'fan_profiles': copy.deepcopy(self.default_fan_profiles),
+            'fan_aliases': copy.deepcopy(self.default_fan_aliases),
+        }
         self._load_config()     # Load configuration from .yaml file
 
     # Save current configuration to .yaml file
@@ -98,6 +99,12 @@ class ConfigReader:
 
     def _init_default_config(self):
         logger.info("Using default config values")
+        self.config = {
+            'server': copy.deepcopy(self.defualt_server),
+            'hardware': copy.deepcopy(self.defualt_hardware),
+            'fan_profiles': copy.deepcopy(self.default_fan_profiles),
+            'fan_aliases': copy.deepcopy(self.default_fan_aliases),
+        }
         self._save_config()
 
     # Print out .yaml config
@@ -129,9 +136,9 @@ class ConfigReader:
     def update_fan_profile(self, profile_name, profile_type, profile_params):
         allowed_profile_types = ['PWM', 'RPM']
 
-        profile_type = profile_type.upper()
+        profile_type = str(profile_type or '').strip().upper()
 
-        if not any(profile_type in x  for x in allowed_profile_types):
+        if profile_type not in allowed_profile_types:
             logger.error(f"Fan profile type must be {allowed_profile_types}! (`{profile_type}` specified)")
             return False
 
