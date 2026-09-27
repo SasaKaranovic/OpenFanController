@@ -3,19 +3,19 @@
 Every test works on a config file in pytest's temp directory, never the real `config.yaml`.
 """
 import pytest
-from ruamel import yaml
+from ruamel.yaml import YAML
 
 from config import ConfigReader
 
 
 def read_yaml(path):
     with open(path, 'r', encoding="utf8") as file:
-        return yaml.safe_load(file)
+        return YAML(typ='safe', pure=True).load(file)
 
 
 def write_yaml(path, data):
     with open(path, 'w', encoding="utf8") as file:
-        yaml.dump(data, file, Dumper=yaml.RoundTripDumper)
+        YAML().dump(data, file)
 
 
 def reload_config(path):

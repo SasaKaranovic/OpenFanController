@@ -50,3 +50,8 @@ so the test guards against the bug coming back.
 
 `.github/workflows/python_tests.yaml` runs `run_tests.sh --cov` on Python 3.9, 3.10 and 3.12
 for every pull request that changes `Software/Python`, and on pushes to `master`.
+
+## Hardware tests
+
+End-to-end tests against real (or simulated) OpenFAN controllers live in `../hardware_tests`
+and use the same scripts, e.g. `run_tests.bat --device sim-xl`. See `hardware_tests/README.md`.

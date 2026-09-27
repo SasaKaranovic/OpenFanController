@@ -20,7 +20,7 @@ from tornado.testing import bind_unused_port
 import webserver
 from board import OpenFAN_Board
 from config import ConfigReader
-from fakes import FakeFanCommander, FakeFirmware, HW_INFO_CONTROLLER, HW_INFO_XL
+from fakes import FakeFanCommander, FakeFirmware, HW_INFO_CONTROLLER, HW_INFO_MICRO, HW_INFO_XL
 
 
 class ApiClient:
@@ -363,3 +363,24 @@ def test_service_without_port_or_device_fails(service_env):
     _write_hardware_port(service_env, "")
     with pytest.raises(Exception, match="Could not find Fan controller"):
         webserver.FAN_API_Service()
+
+
+# --- Channel limits follow the board (fan_count / sensor_count) ---
+
+def test_controller_accepts_every_fan_index(api):
+    assert_ok(api.get_json("/api/v0/fan/9/pwm?value=50"))
+    assert api.commander.sent == [">02097F"]
+
+
+def test_micro_accepts_only_fan_0(make_api):
+    micro = make_api(HW_INFO_MICRO)
+    assert_ok(micro.get_json("/api/v0/fan/0/pwm?value=50"))
+    assert_error(micro.get_json("/api/v0/fan/1/pwm?value=50"), "Invalid fan index")
+    assert_error(micro.get_json("/api/v0/alias/1/get"), "Invalid fan index")
+    assert micro.commander.sent == [">02007F"]
+
+
+def test_xl_sensor_index_limits(xl_api):
+    assert_ok(xl_api.get_json("/api/v0/sensor/temperature/3/get"))
+    assert_error(xl_api.get_json("/api/v0/sensor/temperature/4/get"), "Invalid temperature index")
+    assert xl_api.commander.sent == [">0B03"]

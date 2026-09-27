@@ -2,3 +2,7 @@
 -r requirements.txt
 pytest>=8.0
 pytest-cov>=5.0
+# Hardware tests (hardware_tests/)
+requests>=2.31
+beautifulsoup4>=4.12
+pytest-timeout>=2.2

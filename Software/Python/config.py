@@ -1,6 +1,6 @@
 import os
 import copy
-from ruamel import yaml
+from ruamel.yaml import YAML
 from base_logger import logger
 
 class ConfigReader:
@@ -28,7 +28,7 @@ class ConfigReader:
     # Save current configuration to .yaml file
     def _save_config(self):
         with open(self.config_path, 'w', encoding="utf8") as cfg_file:
-            yaml.dump(self.config, cfg_file, Dumper=yaml.RoundTripDumper)
+            YAML().dump(self.config, cfg_file)
 
     # Read .yaml config file
     def _load_config(self):
@@ -38,7 +38,7 @@ class ConfigReader:
             return False
 
         with open(self.config_path, 'r', encoding="utf8") as file:
-            cfg = yaml.safe_load(file)
+            cfg = YAML(typ='safe', pure=True).load(file)
 
         if cfg is None:
             self._init_default_config()

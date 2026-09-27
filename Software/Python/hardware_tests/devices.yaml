@@ -1,0 +1,100 @@
+# OpenFAN hardware test inventory
+# =================================
+# The single source of truth for "what hardware is connected and what can it do".
+# Tests read the selected device's profile and decide for themselves whether to run,
+# skip, or verify that the API correctly reports a feature as unsupported.
+#
+#   boards:   what a board MODEL can do (shared by every unit of that model).
+#             Checked against the capabilities the running server reports in /api/v0/info
+#             before any test runs, so a swapped cable or wrong firmware aborts the run.
+#   devices:  the PHYSICAL units (or simulated ones) and how each is wired.
+#
+# Features (used by @pytest.mark.requires(...) in tests):
+#   pwm, rpm_control, profiles, temperature, aliases
+# Suites (pytest markers, one per test file):
+#   smoke, html, fan_control, profiles, aliases, sensors
+
+defaults:
+  safe_pwm: 100                 # PWM % every fan is set to before and after a run
+  timing:
+    settle_s: 15                # max time to wait for fan RPM to reach a new value
+    poll_s: 0.5                 # how often to poll while waiting
+    test_timeout_s: 180         # per-test timeout (needs pytest-timeout)
+  rpm:
+    min_running_rpm: 300        # a connected fan at 100% PWM must spin faster than this
+    min_increase_pct: 20        # 30% -> 100% PWM must raise RPM by at least this much
+    target_tolerance_pct: 10    # RPM control: reading must be within +/- this of the target
+
+boards:
+  openfan-controller:
+    name: OpenFAN Controller
+    hw_rev: "3"
+    fan_count: 10
+    sensor_count: 0
+    features: [pwm, rpm_control, profiles, aliases]
+  openfan-xl:
+    name: OpenFAN XL
+    hw_rev: "4"
+    fan_count: 10
+    sensor_count: 4
+    features: [pwm, temperature, aliases]
+  openfan-micro:
+    name: OpenFAN Micro
+    hw_rev: "4"
+    fan_count: 1
+    sensor_count: 0
+    features: [pwm, aliases]
+
+devices:
+  # --- Simulated devices: no hardware needed. Used to try the suite locally and in CI ---
+  sim-controller:
+    board: openfan-controller
+    simulated: true
+    server_port: 3190
+    fans_connected: [0, 1, 2, 5]
+    suites: [smoke, html, fan_control, profiles, aliases]
+    timing: {settle_s: 3, poll_s: 0.1}
+  sim-xl:
+    board: openfan-xl
+    simulated: true
+    server_port: 3191
+    fans_connected: [0, 3]
+    sensors_connected: [0, 2]
+    suites: [smoke, html, fan_control, aliases, sensors]
+    timing: {settle_s: 3, poll_s: 0.1}
+  sim-micro:
+    board: openfan-micro
+    simulated: true
+    server_port: 3192
+    fans_connected: [0]
+    suites: [smoke, html, fan_control, aliases]
+    timing: {settle_s: 3, poll_s: 0.1}
+
+  # --- Physical controllers on the test runner ---
+  # Fill in `usb_serial` (see `run_tests.bat --list-devices`) or `port`, then set `enabled: true`.
+  # Only enabled, non-simulated devices are picked up by the GitHub hardware workflow.
+  lab-ctrl-01:
+    enabled: false
+    board: openfan-controller
+    usb_serial: "CHANGE_ME"     # USB serial number; the port (COMx or /dev/tty...) is looked up from it
+    # port: COM7                # ...or give the port directly instead
+    server_port: 3101
+    fans_connected: [0, 1]      # channels with a real fan (RPM measurements only run on these)
+    suites: [smoke, html, fan_control, profiles, aliases]
+    known_failures: {}
+    #  "test_hw_fan_control.py::test_rpm_follows_pwm[fan1]": "fan 1 tach wire damaged (issue #61)"
+  lab-xl-01:
+    enabled: false
+    board: openfan-xl
+    usb_serial: "CHANGE_ME"
+    server_port: 3102
+    fans_connected: [0]
+    sensors_connected: [0]
+    suites: [smoke, html, fan_control, aliases, sensors]
+  lab-micro-01:
+    enabled: false
+    board: openfan-micro
+    usb_serial: "CHANGE_ME"
+    server_port: 3103
+    fans_connected: [0]
+    suites: [smoke, html, fan_control, aliases]
