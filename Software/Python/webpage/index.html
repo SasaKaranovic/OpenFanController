@@ -70,7 +70,7 @@
                     {% for i in range(board['fan_count']) %}
                       <div class="datagrid-item">
                         <div class="datagrid-title fan-name" id="fan-{{i}}-name">Fan #{{i+1}}</div>
-                        <div class="datagrid-content"><span id="fan-{{i}}-rpm"></span> RPM</div>
+                        <div class="datagrid-content"><span id="fan-{{i}}-rpm"></span><span class="rpm-suffix"> RPM</span></div>
                       </div>
                     {% end %}
 

@@ -152,12 +152,14 @@ function gui_update_fan_status()
 
         rpm.forEach(function (value, index) {
             $("#fan-"+ index +"-rpm").text(value);
+            $('.rpm-suffix').show();
         });
 
       })
       .fail(function(e) {
+        $('.rpm-suffix').hide();
         {% for i in range(board['fan_count']) %}
-        $("#fan-{{i}}-rpm").text('ERR');{% end %}
+        $("#fan-{{i}}-rpm").text('_COM_ERR_');{% end %}
       });
 }
 
