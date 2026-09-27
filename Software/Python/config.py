@@ -5,7 +5,7 @@ from base_logger import logger
 class ConfigReader:
     config_path = None
     defualt_server = { 'hostname': 'localhost', 'port': 3000, 'communication_timeout': 1 }
-    defualt_hardware = { 'hostname': 'localhost', 'port': 3000, 'communication_timeout': 1 }
+    defualt_hardware = { 'port': '__CHANGE_ME__', 'communication_timeout': 1 }
     default_fan_profiles = {
                             '50% PWM' : { 'type': 'pwm', 'values': [50,50,50,50,50,50,50,50,50,50] },
                             '100% PWM' : { 'type': 'pwm', 'values': [100,100,100,100,100,100,100,100,100,100] },
