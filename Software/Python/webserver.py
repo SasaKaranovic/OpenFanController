@@ -91,24 +91,28 @@ class FanProfile_Add(BaseHandler):
         if not self.supports_fan_profiles():
             return self.send_error_no_profile_support()
 
-        profile_name = self.get_argument('name', None)
-        profile_type = self.get_argument('type', None)
-        profile_values_str = self.get_argument('values', None)
-        error = False
-        message = ""
+        try:
+            profile_name = self.get_argument('name', None)
+            profile_type = self.get_argument('type', None)
+            profile_values_str = self.get_argument('values', None)
+            error = False
+            message = ""
 
-        if profile_name is None:
-            error = True
-            message = 'Fan profile name can not be empty!'
-        if profile_type is None:
-            error = True
-            message='Fan profile type can not be empty!'
-        if profile_values_str is None:
-            error = True
-            message='Fan profile values can not be empty!'
-        if profile_type.lower() != 'pwm' and profile_type.lower() != 'rpm':
-            error = True
+            if profile_name is None:
+                error = True
+                message = 'Fan profile name can not be empty!'
+            if profile_type is None:
+                error = True
+                message='Fan profile type can not be empty!'
+            if profile_values_str is None:
+                error = True
+                message='Fan profile values can not be empty!'
+            if profile_type.lower() != 'pwm' and profile_type.lower() != 'rpm':
+                error = True
             message='Fan profile type can be either "pwm" or "rpm".'
+        except Exception as e:
+            logger.error(e)
+            error = True
 
         if error:
             return self.send_response(status='error', message=message, data=None)
@@ -186,7 +190,7 @@ class TemperatureSensor_Handler(BaseHandler):
         if not self.is_valid_temperature_index(sensor_index):
             return self.send_response(status='error', message=f'Invalid temperature index (0<=`{sensor_index}`<=3)', data=None)
 
-        temperature = self.handler.get_temperature()
+        temperature = self.handler.get_temperature(sensor_index)
         return self.send_response(status='ok', message='', data=temperature)
 
 class TemperatureSensorAll_Handler(BaseHandler):
@@ -366,6 +370,60 @@ class JSTemplateHandler(BaseHandler):
 
 
 
+def build_handlers(fan_commander, config, board):
+    """Return the Tornado URL routing table.
+
+    Kept separate from `FAN_API_Service` so the API can be built (e.g. in unit tests)
+    with any object that implements the `FanCommander` interface, without real hardware.
+    """
+    ctx = {"handler": fan_commander, "config": config, "board": board}
+    return [
+        (r"/api/v0/profiles/list", FanProfile_List, ctx),
+        (r"/api/v0/profiles/add", FanProfile_Add, ctx),
+        (r"/api/v0/profiles/remove", FanProfile_Remove, ctx),
+        (r"/api/v0/profiles/set", FanProfile_Set, ctx),
+        (r"/api/v0/fan/status", FanStatus_Handler, ctx),
+        (r"/api/v0/sensor/temperature/([0-9])/get", TemperatureSensor_Handler, ctx),
+        (r"/api/v0/sensor/temperature/all/get", TemperatureSensorAll_Handler, ctx),
+        (r"/api/v0/fan/all/set", FanSetALLPWM, ctx),
+        # !!NOTE!! `/api/v0/fan/([0-9])/set` is now deprecated. Please use `/api/v0/fan/([0-9])/pwm`
+        (r"/api/v0/fan/([0-9])/set", FanSetPWM_Handler, ctx),
+        (r"/api/v0/fan/([0-9])/pwm", FanSetPWM_Handler, ctx),
+        (r"/api/v0/fan/([0-9])/rpm", FanSetRPM_Handler, ctx),
+        (r"/api/v0/alias/all/get", FanAliasAll_Handler, ctx),
+        (r"/api/v0/alias/([0-9])/get", FanAliasGet_Handler, ctx),
+        (r"/api/v0/alias/([0-9])/set", FanAliasSet_Handler, ctx),
+        (r"/api/v0/info", Info_Handler, ctx),
+        (r"/", HTMLTemplateHandler, ctx),
+        (r"/(.*)\.html", HTMLTemplateHandler, ctx),
+        (r"/assets/js/openfan_(.*)\.js", JSTemplateHandler, ctx),
+        (r"/", FileHandler),
+        (r'/(.*)', StaticFileHandler, {'path': WEBPAGE_ROOT}),
+    ]
+
+
+DEFAULT_SERVER_SETTINGS = {
+    "debug": True,
+    # "autoreload": False,
+    "autoreload": True,
+    "default_handler_class": Default_404_Handler,
+    "template_path": "webpage",
+    # "template_whitespace": "single"
+    "template_whitespace": "all"
+}
+
+
+def make_app(fan_commander, config, board, **settings_overrides):
+    """Create the Tornado `Application` without opening a serial port.
+
+    `settings_overrides` are merged over `DEFAULT_SERVER_SETTINGS`
+    (tests use this to disable `debug`/`autoreload`).
+    """
+    settings = dict(DEFAULT_SERVER_SETTINGS)
+    settings.update(settings_overrides)
+    return Application(build_handlers(fan_commander, config, board), **settings)
+
+
 class FAN_API_Service(Application):
     def __init__(self):
 
@@ -401,39 +459,8 @@ class FAN_API_Service(Application):
         self.fan_commander = FanCommander(self.serialPort)
         self.board = OpenFAN_Board(self.fan_commander.get_hw_info(), self.fan_commander.get_fw_info())
 
-        self.handlers = [
-            (r"/api/v0/profiles/list", FanProfile_List, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/api/v0/profiles/add", FanProfile_Add, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/api/v0/profiles/remove", FanProfile_Remove, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/api/v0/profiles/set", FanProfile_Set, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/api/v0/fan/status", FanStatus_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/api/v0/sensor/temperature/([0-9])/get", TemperatureSensor_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/api/v0/sensor/temperature/all/get", TemperatureSensorAll_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/api/v0/fan/all/set", FanSetALLPWM, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            # !!NOTE!! `/api/v0/fan/([0-9])/set` is now deprecated. Please use `/api/v0/fan/([0-9])/pwm`
-            (r"/api/v0/fan/([0-9])/set", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/api/v0/fan/([0-9])/pwm", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/api/v0/fan/([0-9])/rpm", FanSetRPM_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/api/v0/alias/all/get", FanAliasAll_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/api/v0/alias/([0-9])/get", FanAliasGet_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/api/v0/alias/([0-9])/set", FanAliasSet_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/api/v0/info", Info_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/", HTMLTemplateHandler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/(.*)\.html", HTMLTemplateHandler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/assets/js/openfan_(.*)\.js", JSTemplateHandler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
-            (r"/", FileHandler),
-            (r'/(.*)', StaticFileHandler, {'path': WEBPAGE_ROOT}),
-        ]
-
-        self.server_settings = {
-            "debug": True,
-            # "autoreload": False,
-            "autoreload": True,
-            "default_handler_class": Default_404_Handler,
-            "template_path": "webpage",
-            # "template_whitespace": "single"
-            "template_whitespace": "all"
-        }
+        self.handlers = build_handlers(self.fan_commander, self.config, self.board)
+        self.server_settings = dict(DEFAULT_SERVER_SETTINGS)
 
     def run_forever(self):
         logger.info("Karanovic Research OpenFan - Starting API server")
