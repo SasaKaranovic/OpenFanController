@@ -150,9 +150,9 @@ function gui_update_fan_status()
       .done(function(e) {
         const rpm = Object.values(e['data']);
 
+        $('.rpm-suffix').show();
         rpm.forEach(function (value, index) {
             $("#fan-"+ index +"-rpm").text(value);
-            $('.rpm-suffix').show();
         });
 
       })
