@@ -55,10 +55,10 @@ def default_formatter():
 
 def set_logger_level(level='info'):
     if level.lower() == 'info':
-        logging.getLogger('kr_gauge_root').setLevel("INFO")
+        logging.getLogger('kr_openfan_root').setLevel("INFO")
         logger.info("Logging level: INFO")
     elif level.lower() == 'debug':
-        logging.getLogger('kr_gauge_root').setLevel("DEBUG")
+        logging.getLogger('kr_openfan_root').setLevel("DEBUG")
         logger.info("Logging level: DEBUG")
         logger.setLevel(logging.DEBUG)
     else:
