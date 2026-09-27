@@ -84,8 +84,8 @@ class FanCommander(SerialHardware):
         return self._parse_fan_rpm(res)
 
     def set_fan_pwm(self, fan, pwm):
-        if int(pwm) > 255:
-            raise ValueError(f'Invalid PWM value (`{pwm}`>255)')
+        if int(pwm) > 100:
+            raise ValueError(f'Invalid PWM value (`{pwm}`>100)')
 
         pwm = int(pwm * 255 / 100)
 
@@ -94,8 +94,8 @@ class FanCommander(SerialHardware):
         return self._sendCommand(cmd, data)
 
     def set_all_fan_pwm(self, pwm):
-        if int(pwm) > 255:
-            raise ValueError(f'Invalid PWM value (`{pwm}`>255)')
+        if int(pwm) > 100:
+            raise ValueError(f'Invalid PWM value (`{pwm}`>100)')
 
         pwm = int(pwm * 255 / 100)
 
