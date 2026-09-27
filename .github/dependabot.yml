@@ -1,0 +1,31 @@
+# Dependabot configuration.
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+version: 2
+updates:
+  # Python packages (requirements.txt / requirements-dev.txt in the repo root).
+  # NOTE: Dependabot version updates bump a pinned version to a newer one, so
+  # this only produces PRs once the requirements files pin versions (e.g.
+  # `tornado==6.4.1`). While they stay unpinned this mostly covers security
+  # advisories rather than routine bumps.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "pip"
+
+  # GitHub Actions used in .github/workflows/*. Actions are always versioned,
+  # so this catches drift like the Node 20 runtime deprecation automatically.
+  # All action bumps are grouped into a single weekly PR to reduce noise.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "ci"
+    groups:
+      github-actions:
+        patterns:
+          - "*"

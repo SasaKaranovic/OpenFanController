@@ -3,6 +3,7 @@ import os
 import signal
 import argparse
 import time
+import datetime
 import re
 from mimetypes import guess_type
 from tornado.web import Application
@@ -14,6 +15,8 @@ from tornado.ioloop import IOLoop
 from FanCommander import FanCommander
 from base_logger import logger, set_logger_level
 from config import ConfigReader
+from board import OpenFAN_Board
+from version import get_git_long_hash, get_git_short_hash, get_git_commit_date
 
 BASEDIR_NAME = os.path.dirname(__file__)
 BASEDIR_PATH = os.path.abspath(BASEDIR_NAME)
@@ -21,9 +24,14 @@ WEBPAGE_ROOT = os.path.join(BASEDIR_PATH, 'webpage')
 
 
 class BaseHandler(RequestHandler):
-    def initialize(self, handler, config):
+    def initialize(self, handler, config, board):
         self.handler = handler
         self.config = config
+        self.board = board
+        self.limit_fan_index_min = 0
+        self.limit_fan_index_max = 9
+        self.limit_temp_index_min = 0
+        self.limit_temp_index_max = 3
 
     def send_response(self, status, message='', data=None):
         self.write({'status': status, 'message': message, 'data': data})
@@ -36,27 +44,52 @@ class BaseHandler(RequestHandler):
 
     def is_valid_fan_index(self, index):
         try:
-            if int(index) >=0 and int(index) <= 9:
+            if int(index) >=self.limit_fan_index_min and int(index) <= self.limit_fan_index_max:
                 return True
             return False
         except ValueError:
             return False
 
-class RootHandler(BaseHandler):
-    def get(self):
-        logger.debug("Root handler")
-        resp = {'status': 'ok', 'message': 'Karanovic Research Fan Controller API Server v0.1'}
-        self.write(resp)
+    def is_valid_temperature_index(self, index):
+        try:
+            if int(index) >=self.limit_temp_index_min and int(index) <= self.limit_temp_index_max:
+                return True
+            return False
+        except ValueError:
+            return False
+
+    def supports_fan_profiles(self):
+        return self.board.board_has_profiles()
+
+    def supports_rpm_control(self):
+        return self.board.fw_support_rpm()
+
+    def supports_temperature_sensors(self):
+        return self.board.board_has_sensors()
+
+    def send_error_no_profile_support(self):
+        return self.send_response(status='error', message=f'Board `{self.board.get_name()}` does not support fan profiles!')
+
+    def send_error_no_rpm_control(self):
+        return self.send_response(status='error', message=f'Board `{self.board.get_name()}` does not yet support RPM control!')
+
+    def send_error_no_temperature_sensor_support(self):
+        return self.send_response(status='error', message=f'Board `{self.board.get_name()}` does not support temperature sensors!')
 
 class FanProfile_List(BaseHandler):
     def get(self):
         logger.info("Request:FANPROFILE_LIST")
+        if not self.supports_fan_profiles():
+            return self.send_error_no_profile_support()
+
         profiles = self.config.get_all_fan_profiles()
         self.send_response(status='ok', message=f'There are {len(profiles)} FAN profiles available.', data=profiles)
 
 class FanProfile_Add(BaseHandler):
     def post(self):
         logger.info("Request:FANPROFILE_ADD")
+        if not self.supports_fan_profiles():
+            return self.send_error_no_profile_support()
 
         profile_name = self.get_argument('name', None)
         profile_type = self.get_argument('type', None)
@@ -78,29 +111,31 @@ class FanProfile_Add(BaseHandler):
             message='Fan profile type can be either "pwm" or "rpm".'
 
         if error:
-            return self.send_response(status='fail', message=message, data=None)
+            return self.send_response(status='error', message=message, data=None)
 
         fan_profile = profile_values_str.split(';')
         try:
             fan_profile = [int(i) for i in fan_profile]
         except Exception as e:
             logger.error(f'FanProfile_Add error: {e}')
-            return self.send_response(status='fail', message='Fan profile can only contain integer values!', data=None)
+            return self.send_response(status='error', message='Fan profile can only contain integer values!', data=None)
 
         if len(fan_profile) != 10:
-            return self.send_response(status='fail', message=f'Fan profile expects exactly 10 values! ({len(fan_profile)} given)', data=None)
+            return self.send_response(status='error', message=f'Fan profile expects exactly 10 values! ({len(fan_profile)} given)', data=None)
 
         if self.config.update_fan_profile(profile_name, profile_type, fan_profile):
             return self.send_response(status='ok', message='Profile added', data=None)
-        return self.send_response(status='fail', message='Failed to add profile!', data=None)
+        return self.send_response(status='error', message='Failed to add profile!', data=None)
 
 class FanProfile_Remove(BaseHandler):
     def get(self):
         logger.info("Request:FANPROFILE_REMOVE")
+        if not self.supports_fan_profiles():
+            return self.send_error_no_profile_support()
 
         name = self.get_argument('name', None)
         if name is None:
-            return self.send_response(status='fail', message='Name can not be empty!', data=None)
+            return self.send_response(status='error', message='Name can not be empty!', data=None)
 
         res = self.config.remove_fan_profile(name)
         if res is True:
@@ -110,19 +145,21 @@ class FanProfile_Remove(BaseHandler):
 class FanProfile_Set(BaseHandler):
     def get(self):
         logger.info("Request:FANPROFILE_SET")
+        if not self.supports_fan_profiles():
+            return self.send_error_no_profile_support()
 
         name = self.get_argument('name', None)
         if name is None:
-            return self.send_response(status='fail', message='Name can not be empty!', data=None)
+            return self.send_response(status='error', message='Name can not be empty!', data=None)
 
         profile = self.config.get_fan_profile(name)
         if not profile:
-            return self.send_response(status='fail', message='Profile does not exist! (Names are case-sensitive!)', data=None)
+            return self.send_response(status='error', message='Profile does not exist! (Names are case-sensitive!)', data=None)
 
         profile_type = profile['type'].upper()
         if profile_type not in ["PWM", "RPM"]:
             return self.send_response(
-                                      status='fail',
+                                      status='error',
                                       message=f'Malformed profile type! (expected "pwm" or "rpm". "{profile_type}" received.)',
                                       data=None)
 
@@ -140,9 +177,30 @@ class FanProfile_Set(BaseHandler):
 
         return self.send_response(status='ok', message=f'Profile `{name}` activated.{msg}.', data=None)
 
+class TemperatureSensor_Handler(BaseHandler):
+    def get(self, sensor_index=-1):
+        logger.info("Request:TEMPERATURE")
+        if not self.supports_temperature_sensors():
+            return self.send_error_no_temperature_sensor_support()
+
+        if not self.is_valid_temperature_index(sensor_index):
+            return self.send_response(status='error', message=f'Invalid temperature index (0<=`{sensor_index}`<=3)', data=None)
+
+        temperature = self.handler.get_temperature()
+        return self.send_response(status='ok', message='', data=temperature)
+
+class TemperatureSensorAll_Handler(BaseHandler):
+    def get(self):
+        logger.debug("Request:TEMPERATURE_ALL")
+        if not self.supports_temperature_sensors():
+            return self.send_error_no_temperature_sensor_support()
+
+        temperature = self.handler.get_temperature_all()
+        return self.send_response(status='ok', message='', data=temperature)
+
 class FanStatus_Handler(BaseHandler):
     def get(self):
-        logger.info("Request:STATUS")
+        logger.debug("Request:STATUS")
 
         rpm = self.handler.get_all_fan_rpm()
         return self.send_response(status='ok', message='', data=rpm)
@@ -163,7 +221,7 @@ class FanSetALLPWM(BaseHandler):
 class FanSetPWM_Handler(BaseHandler):
     def get(self, fan_index=-1):
         if not self.is_valid_fan_index(fan_index):
-            return self.send_response(status='fail', message=f'Invalid fan index (0<=`{fan_index}`<=9)', data=None)
+            return self.send_response(status='error', message=f'Invalid fan index ({self.limit_fan_index_min}<=`{fan_index}`<={self.limit_fan_index_max})', data=None)
 
         value = self.get_argument('value', 0)
         value = int(float(value))
@@ -179,8 +237,11 @@ class FanSetPWM_Handler(BaseHandler):
 
 class FanSetRPM_Handler(BaseHandler):
     def get(self, fan_index=-1):
+        if not self.supports_rpm_control():
+            return self.send_error_no_rpm_control()
+
         if not self.is_valid_fan_index(fan_index):
-            return self.send_response(status='fail', message=f'Invalid fan index (0<=`{fan_index}`<=9)', data=None)
+            return self.send_response(status='error', message=f'Invalid fan index ({self.limit_fan_index_min}<=`{fan_index}`<={self.limit_fan_index_max})', data=None)
 
         value = int(self.get_argument('value', 0))
         if value > 16000:
@@ -207,7 +268,7 @@ class FanAliasAll_Handler(BaseHandler):
 class FanAliasGet_Handler(BaseHandler):
     def get(self, fan_index=-1):
         if not self.is_valid_fan_index(fan_index):
-            return self.send_response(status='fail', message=f'Invalid fan index (0<=`{fan_index}`<=9)', data=None)
+            return self.send_response(status='error', message=f'Invalid fan index ({self.limit_fan_index_min}<=`{fan_index}`<={self.limit_fan_index_max})', data=None)
 
         # Fan index is specified
         fan_index = int(fan_index)
@@ -218,28 +279,27 @@ class FanAliasGet_Handler(BaseHandler):
 class FanAliasSet_Handler(BaseHandler):
     def get(self, fan_index=-1):
         if not self.is_valid_fan_index(fan_index):
-            return self.send_response(status='fail', message=f'Invalid fan index (0<=`{fan_index}`<=9)', data=None)
+            return self.send_response(status='error', message=f'Invalid fan index ({self.limit_fan_index_min}<=`{fan_index}`<={self.limit_fan_index_max})', data=None)
 
         value = self.get_argument('value', None)
         if value is None:
-            return self.send_response(status='fail', message='Fan alias can not be none!', data=None)
+            return self.send_response(status='error', message='Fan alias can not be none!', data=None)
         if re.search(r"^[a-z0-9\-_\.# ]*?$", value, re.MULTILINE | re.IGNORECASE) is None:
-            return self.send_response(status='fail', message='Fan alias can only contain `A-Z`, `0-9`, `-`, `_`, `#` and `<space>` characters!', data=None)
+            return self.send_response(status='error', message='Fan alias can only contain `A-Z`, `0-9`, `-`, `_`, `#` and `<space>` characters!', data=None)
 
         # Fan index is specified
         fan_index = int(fan_index)
         logger.info(f"Request:SET FAN #{fan_index} alias to: `{value}`")
         if self.config.set_fan_alias(fan_index, value):
             return self.send_response(status='ok', message=f'Fan #{fan_index} alias set to:`{value}`', data=None)
-        return self.send_response(status='fail', message=f'Failed to set fan alias. (`{fan_index}:{value}`)', data=None)
+        return self.send_response(status='error', message=f'Failed to set fan alias. (`{fan_index}:{value}`)', data=None)
 
 class Info_Handler(BaseHandler):
     def get(self):
-
-        data = {}
-        data['hardware'] = self.handler.get_hw_info()
-        data['firmware'] = self.handler.get_hw_info()
-        data['software'] = "Version: 0.2\r\nBuild: 2024-06-01"
+        data = {    'hardware': self.handler.get_hw_info(),
+                    'firmware': self.handler.get_fw_info(),
+                    'software': f"Version: v{get_git_commit_date()} Build: {get_git_short_hash()}"
+        }
 
         return self.send_response(status='ok', message='System information', data=data)
 
@@ -248,8 +308,7 @@ class Default_404_Handler(RequestHandler):
     # Override prepare() instead of get() to cover all possible HTTP methods.
     def prepare(self):
         self.set_status(404)
-        resp = {'status': 'fail', 'message': 'Unsupported method'}
-        self.write(resp)
+        self.write({'status': 'fail', 'message': 'Unsupported method'})
         raise Finish()
 
 class FileHandler(RequestHandler):
@@ -267,6 +326,43 @@ class FileHandler(RequestHandler):
         self.add_header('Content-Type', content_type)
         with open(file_location, encoding="utf8") as source_file:
             self.write(source_file.read())
+
+class HTMLTemplateHandler(BaseHandler):
+    def get(self, re_match=None):
+
+        logger.debug(f"HTMLTemplateHandler: {re_match}")
+        board = self.board.get_board_capabilities()
+        data = {}
+
+        data['year'] = datetime.datetime.now().year
+        data['commit_short_hash'] = get_git_short_hash()
+        data['commit_long_hash'] = get_git_long_hash()
+        data['commit_time'] = get_git_commit_date()
+
+        self.set_header('Content-Type', 'text/html')
+        if re_match:
+            self.render(f'{re_match}.html', board=board, data=data)
+        else:
+            self.render('index.html', board=board, data=data)
+
+
+class JSTemplateHandler(BaseHandler):
+    def get(self, re_match=None):
+
+        logger.debug(f"JSTemplateHandler: {re_match}")
+        board = self.board.get_board_capabilities()
+        data = {}
+
+        data['year'] = datetime.datetime.now().year
+        data['commit_short_hash'] = get_git_short_hash()
+        data['commit_long_hash'] = get_git_long_hash()
+        data['commit_time'] = get_git_commit_date()
+
+        self.set_header('Content-Type', 'text/javascript')
+        if re_match:
+            self.render(f'assets/js/openfan_{re_match}.js', board=board, data=data)
+        else:
+            self.write("")
 
 
 
@@ -303,31 +399,40 @@ class FAN_API_Service(Application):
 
         logger.info("Fan Controller port: {}".format(self.serialPort))
         self.fan_commander = FanCommander(self.serialPort)
+        self.board = OpenFAN_Board(self.fan_commander.get_hw_info(), self.fan_commander.get_fw_info())
 
         self.handlers = [
-            (r"/api/v0/profiles/list", FanProfile_List, {"handler":self.fan_commander, "config":self.config}),
-            (r"/api/v0/profiles/add", FanProfile_Add, {"handler":self.fan_commander, "config":self.config}),
-            (r"/api/v0/profiles/remove", FanProfile_Remove, {"handler":self.fan_commander, "config":self.config}),
-            (r"/api/v0/profiles/set", FanProfile_Set, {"handler":self.fan_commander, "config":self.config}),
-            (r"/api/v0/fan/status", FanStatus_Handler, {"handler":self.fan_commander, "config":self.config}),
-            (r"/api/v0/fan/all/set", FanSetALLPWM, {"handler":self.fan_commander, "config":self.config}),
-            # `/api/v0/fan/([0-9])/set` is now deprecated. Please use `/api/v0/fan/([0-9])/pwm`
-            (r"/api/v0/fan/([0-9])/set", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config}),
-            (r"/api/v0/fan/([0-9])/pwm", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config}),
-            (r"/api/v0/fan/([0-9])/rpm", FanSetRPM_Handler, {"handler":self.fan_commander, "config":self.config}),
-            (r"/api/v0/alias/all/get", FanAliasAll_Handler, {"handler":self.fan_commander, "config":self.config}),
-            (r"/api/v0/alias/([0-9])/get", FanAliasGet_Handler, {"handler":self.fan_commander, "config":self.config}),
-            (r"/api/v0/alias/([0-9])/set", FanAliasSet_Handler, {"handler":self.fan_commander, "config":self.config}),
-            (r"/api/v0/info", Info_Handler, {"handler":self.fan_commander, "config":self.config}),
+            (r"/api/v0/profiles/list", FanProfile_List, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/api/v0/profiles/add", FanProfile_Add, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/api/v0/profiles/remove", FanProfile_Remove, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/api/v0/profiles/set", FanProfile_Set, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/api/v0/fan/status", FanStatus_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/api/v0/sensor/temperature/([0-9])/get", TemperatureSensor_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/api/v0/sensor/temperature/all/get", TemperatureSensorAll_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/api/v0/fan/all/set", FanSetALLPWM, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            # !!NOTE!! `/api/v0/fan/([0-9])/set` is now deprecated. Please use `/api/v0/fan/([0-9])/pwm`
+            (r"/api/v0/fan/([0-9])/set", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/api/v0/fan/([0-9])/pwm", FanSetPWM_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/api/v0/fan/([0-9])/rpm", FanSetRPM_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/api/v0/alias/all/get", FanAliasAll_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/api/v0/alias/([0-9])/get", FanAliasGet_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/api/v0/alias/([0-9])/set", FanAliasSet_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/api/v0/info", Info_Handler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/", HTMLTemplateHandler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/(.*)\.html", HTMLTemplateHandler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
+            (r"/assets/js/openfan_(.*)\.js", JSTemplateHandler, {"handler":self.fan_commander, "config":self.config, "board":self.board}),
             (r"/", FileHandler),
             (r'/(.*)', StaticFileHandler, {'path': WEBPAGE_ROOT}),
         ]
 
         self.server_settings = {
             "debug": True,
-            "autoreload": False,
-            # "autoreload": True,
+            # "autoreload": False,
+            "autoreload": True,
             "default_handler_class": Default_404_Handler,
+            "template_path": "webpage",
+            # "template_whitespace": "single"
+            "template_whitespace": "all"
         }
 
     def run_forever(self):

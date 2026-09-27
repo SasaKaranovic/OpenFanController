@@ -12,8 +12,9 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
-    <title>Open Fan Controller - Karanovic Research</title>
+    <title>{{ board['name'] }} - Karanovic Research</title>
     <!-- CSS files -->
+    <!-- <link href="assets/css/tabler.min.css?1692870487" rel="stylesheet"/> -->
     <link href="assets/css/tabler.min.css?1692870487" rel="stylesheet"/>
     <link href="assets/css/demo.css?1692870487" rel="stylesheet"/>
     <style>
@@ -27,9 +28,9 @@
     </style>
   </head>
   <body >
-    <script src="assets/js/demo-theme.min.js?1692870487"></script>
+    <script src="assets/js/theme.min.js?1692870487"></script>
     <div class="page">
-        <div id="pageheader" data-include="header"></div>
+        {% include views/header.html %}
         <div class="page-wrapper" id="content">
 
 
@@ -44,7 +45,7 @@
                   KaranovicResearch
                 </div>
                 <h2 class="page-title">
-                    Open Fan Controller
+                    {{ board['name'] }}
                 </h2>
               </div>
             </div>
@@ -57,7 +58,7 @@
           <div class="container-xl">
             <div class="row row-deck row-cards">
 
-              <!-- Dial information -->
+              <!-- Fan information -->
               <div class="col-12">
                 <div class="card">
                   <div class="card-header">
@@ -66,68 +67,54 @@
                   <div class="card-body">
 
                     <div class="datagrid">
-
+                    {% for i in range(board['fan_count']) %}
                       <div class="datagrid-item">
-                        <div class="datagrid-title fan-name" id="fan-0-name">Fan #1</div>
-                        <div class="datagrid-content"><span id="fan-0-rpm"></span> RPM</div>
+                        <div class="datagrid-title fan-name" id="fan-{{i}}-name">Fan #{{i+1}}</div>
+                        <div class="datagrid-content"><span id="fan-{{i}}-rpm"></span><span class="rpm-suffix"> RPM</span></div>
                       </div>
-
-                      <div class="datagrid-item">
-                        <div class="datagrid-title fan-name" id="fan-1-name">Fan #2</div>
-                        <div class="datagrid-content"><span id="fan-1-rpm"></span> RPM</div>
-                      </div>
-
-                      <div class="datagrid-item">
-                        <div class="datagrid-title fan-name" id="fan-2-name">Fan #3</div>
-                        <div class="datagrid-content"><span id="fan-2-rpm"></span> RPM</div>
-                      </div>
-
-                      <div class="datagrid-item">
-                        <div class="datagrid-title fan-name" id="fan-3-name">Fan #4</div>
-                        <div class="datagrid-content"><span id="fan-3-rpm"></span> RPM</div>
-                      </div>
-
-                      <div class="datagrid-item">
-                        <div class="datagrid-title fan-name" id="fan-4-name">Fan #5</div>
-                        <div class="datagrid-content"><span id="fan-4-rpm"></span> RPM</div>
-                      </div>
-
-                      <div class="datagrid-item">
-                        <div class="datagrid-title fan-name" id="fan-5-name">Fan #6</div>
-                        <div class="datagrid-content"><span id="fan-5-rpm"></span> RPM</div>
-                      </div>
-
-                      <div class="datagrid-item">
-                        <div class="datagrid-title fan-name" id="fan-6-name">Fan #7</div>
-                        <div class="datagrid-content"><span id="fan-6-rpm"></span> RPM</div>
-                      </div>
-
-                      <div class="datagrid-item">
-                        <div class="datagrid-title fan-name" id="fan-7-name">Fan #8</div>
-                        <div class="datagrid-content"><span id="fan-7-rpm"></span> RPM</div>
-                      </div>
-                      <div class="datagrid-item">
-                        <div class="datagrid-title fan-name" id="fan-8-name">Fan #9</div>
-                        <div class="datagrid-content"><span id="fan-8-rpm"></span> RPM</div>
-                      </div>
-                      <div class="datagrid-item">
-                        <div class="datagrid-title fan-name" id="fan-9-name">Fan #10</div>
-                        <div class="datagrid-content"><span id="fan-9-rpm"></span> RPM</div>
-                      </div>
+                    {% end %}
 
                     </div>
 
                   </div>
-                </div> <!-- Dial information -->
-
+                </div> <!-- Fan information -->
               </div>
 
+{% if board['has_sensors'] %}
+              <!-- Temperature -->
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h3 class="card-title">Temperature</h3>
+                  </div>
+                  <div class="card-body">
 
-            <!-- Dial setting -->
+                    <div class="datagrid">
+
+                    {% for i in range(board['sensor_count']) %}
+                      <div class="datagrid-item">
+                        <div class="datagrid-title fan-name" id="sensor-{{i}}-name">Sensor #{{i+1}}</div>
+                        <div class="datagrid-content"><span id="sensor-{{i}}-temperature"></span> <span id="sensor-{{i}}-unit">°C</span></div>
+                      </div>
+                    {% end %}
+
+                    </div>
+
+                  </div>
+                </div> <!-- Dial Temperature -->
+              </div>
+{% end %}
+
+{% if board['fw_support_rpm'] or board['fw_support_pwm'] %}
+            <!-- Manual fan control -->
             <div class="col-12">
                 <div class="row row-cards">
 
+                {% if board['has_profiles'] %}
                 <div class="col-sm-6 col-lg-8">
+                {% else %}
+                <div class="col-sm-12 col-lg-12">
+                {% end %}
                 <div class="card">
                   <div class="card-header">
                     <h3 class="card-title">Manually control a fan</h3>
@@ -136,28 +123,36 @@
 
                     <div class="mb-3">
                       <select class="form-select" id="fan_index">
-                        <option value="0">Fan #1</option>
-                        <option value="1">Fan #2</option>
-                        <option value="2">Fan #3</option>
-                        <option value="3">Fan #4</option>
-                        <option value="4">Fan #5</option>
-                        <option value="5">Fan #6</option>
-                        <option value="6">Fan #7</option>
-                        <option value="7">Fan #8</option>
-                        <option value="8">Fan #9</option>
-                        <option value="9">Fan #10</option>
+                    {% for i in range(board['fan_count']) %}
+                        <option value="{{i}}">Fan #{{i+1}}</option>
+                    {% end %}
                       </select>
                     </div>
 
+                    {% if board['fw_support_rpm'] and board['fw_support_pwm'] %}
                     <div class="mb-3">
                         <label for="fan_value" class="form-label">Target RPM: 1000</label>
-                        <input type="range" class="form-range" min="470" max="2000" value="1000" step="10" id="fan_value">
+                        <input type="range" class="form-range" min="470" max="3000" value="1000" step="10" id="fan_value">
                     </div>
 
                     <div class="form-check form-switch mb-3">
+
                       <input class="form-check-input" type="checkbox" id="control_via_rpm" checked>
                       <label class="form-check-label" for="control_via_rpm">Control in RPM (Revolutions Per Minute)</label>
                     </div>
+                    {% elif board['fw_support_pwm'] %}
+                    <div class="mb-3">
+                        <label for="fan_value" class="form-label">Target PWM: 50</label>
+                        <input type="range" class="form-range" min="0" max="100" value="50" step="5" id="fan_value">
+                    </div>
+
+                    <div class="form-check form-switch mb-3">
+
+                      <input class="form-check-input" type="checkbox" id="control_via_rpm" disabled>
+                      <label class="form-check-label" for="control_via_rpm">Control in PWM percentage</label>
+                    </div>
+                    {% end %}
+
 
                     <div class="mb-2">
                         <button type="button" id="update_fan" class="btn" data-bs-toggle="tooltip">Update FAN value</button>
@@ -166,9 +161,7 @@
                 </div>
                 </div>
 
-
-
-
+                {% if board['has_profiles'] %}
                 <div class="col-sm-6 col-lg-4">
                 <div class="card">
                   <div class="card-header">
@@ -187,174 +180,32 @@
                         </div>
 
                         <div class="mb-2">
-                            <a href="#" class="btn" data-bs-toggle="modal" data-bs-target="#createProfileModal">Crate new profile</a>
+                            <a href="create_fan_profile.html" class="btn">Crate new profile</a>
                         </div>
                   </div>
                 </div>
                 </div>
+                {% end %}
+
+                  </div> <!-- Card row -->
+              </div> <!-- Manual fan control -->
+{% end %}
+
+                </div> <!-- Card row -->
+            </div> <!-- Container -->
+        </div> <!-- Page body -->
 
 
+        </div> <!-- content -->
 
-
-
-              </div> <!-- Card row -->
-          </div> <!-- Dial setting -->
-
-
-
-        </div> <!-- Card row -->
-    </div> <!-- Container -->
-</div> <!-- Page body -->
-
-
-        </div>
-        <div id="pagefooter" data-include="footer"></div>
-    </div>
-
-
-<!-- Remove profile confirm modal -->
-<div class="modal" id="removeProfileModal" tabindex="-1">
-  <div class="modal-dialog modal-sm" role="document">
-    <div class="modal-content">
-      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      <div class="modal-status bg-danger"></div>
-      <div class="modal-body text-center py-4">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-          <path d="M12 9v2m0 4v.01" />
-          <path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75" />
-        </svg>
-        <h3>Are you sure?</h3>
-        <div class="text-secondary mb-3">Do you really want to remove this fan profile?</div>
-        <div class="text-secondary mb-3">There is no Undo button. If you wish to use this fan profile again, you will have to manually create it first.</div>
-        <div class="text-secondary mb-3">Sometimes I accidentally click this button so just double checking.</div>
-
-      </div>
-      <div class="modal-footer">
-        <div class="w-100">
-          <div class="row">
-            <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal">Cancel</a></div>
-            <div class="col"><a href="#" class="btn btn-danger w-100" data-bs-dismiss="modal" id="delete-fan-profile">Yes, nuke it!</a></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div> <!-- end Remove profile confirm modal -->
-
-
-<!-- Add new profile modal -->
-<div class="modal modal-blur fade" id="createProfileModal" tabindex="-1" role="dialog" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Create new fan profile</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-
-            <div class="mb-3">
-              <label class="form-label">Profile Name</label>
-              <input type="text" class="form-control" id="new-fp-name" name="new-fp-name" placeholder="Some cool name for your fan profile...">
-            </div>
-
-            <div id="modal-ranges">
-            <div class="mb-3">
-                <label for="new-fp-fan-1" class="form-label">Fan #1 running at <span id="label-range-fan-1">1000 RPM</span></label>
-                <input type="range" class="form-range" min="0" max="3000" value="1000" step="50" id="new-fp-fan-1" data-fan-id="1">
-            </div>
-            <div class="mb-3">
-                <label for="new-fp-fan-2" class="form-label">Fan #2 running at <span id="label-range-fan-2">1000 RPM</span></label>
-                <input type="range" class="form-range" min="0" max="3000" value="1000" step="50" id="new-fp-fan-2" data-fan-id="2">
-            </div>
-            <div class="mb-3">
-                <label for="new-fp-fan-3" class="form-label">Fan #3 running at <span id="label-range-fan-3">1000 RPM</span></label>
-                <input type="range" class="form-range" min="0" max="3000" value="1000" step="50" id="new-fp-fan-3" data-fan-id="3">
-            </div>
-            <div class="mb-3">
-                <label for="new-fp-fan-4" class="form-label">Fan #4 running at <span id="label-range-fan-4">1000 RPM</span></label>
-                <input type="range" class="form-range" min="0" max="3000" value="1000" step="50" id="new-fp-fan-4" data-fan-id="4">
-            </div>
-            <div class="mb-3">
-                <label for="new-fp-fan-5" class="form-label">Fan #5 running at <span id="label-range-fan-5">1000 RPM</span></label>
-                <input type="range" class="form-range" min="0" max="3000" value="1000" step="50" id="new-fp-fan-5" data-fan-id="5">
-            </div>
-            <div class="mb-3">
-                <label for="new-fp-fan-6" class="form-label">Fan #6 running at <span id="label-range-fan-6">1000 RPM</span></label>
-                <input type="range" class="form-range" min="0" max="3000" value="1000" step="50" id="new-fp-fan-6" data-fan-id="6">
-            </div>
-            <div class="mb-3">
-                <label for="new-fp-fan-7" class="form-label">Fan #7 running at <span id="label-range-fan-7">1000 RPM</span></label>
-                <input type="range" class="form-range" min="0" max="3000" value="1000" step="50" id="new-fp-fan-7" data-fan-id="7">
-            </div>
-            <div class="mb-3">
-                <label for="new-fp-fan-8" class="form-label">Fan #8 running at <span id="label-range-fan-8">1000 RPM</span></label>
-                <input type="range" class="form-range" min="0" max="3000" value="1000" step="50" id="new-fp-fan-8" data-fan-id="8">
-            </div>
-            <div class="mb-3">
-                <label for="new-fp-fan-9" class="form-label">Fan #9 running at <span id="label-range-fan-9">1000 RPM</span></label>
-                <input type="range" class="form-range" min="0" max="3000" value="1000" step="50" id="new-fp-fan-9" data-fan-id="9">
-            </div>
-            <div class="mb-3">
-                <label for="new-fp-fan-10" class="form-label">Fan #10 running at <span id="label-range-fan-10">1000 RPM</span></label>
-                <input type="range" class="form-range" min="0" max="3000" value="1000" step="50" id="new-fp-fan-10" data-fan-id="10">
-            </div>
-
-            </div>
-
-            <div class="form-selectgroup-boxes row mb-3" id="modal-ctl-select">
-              <div class="col-lg-6">
-                <label class="form-selectgroup-item">
-                  <input type="radio" name="fan-control-option" value="rpm" class="form-selectgroup-input" checked>
-                  <span class="form-selectgroup-label d-flex align-items-center p-3">
-                    <span class="me-3">
-                      <span class="form-selectgroup-check"></span>
-                    </span>
-                    <span class="form-selectgroup-label-content">
-                      <span class="form-selectgroup-title strong mb-1">Use target RPM for control</span>
-                      <span class="d-block text-secondary">Fan controller will figure out driving parameters to keep the fans at the specified RPM value.</span>
-                    </span>
-                  </span>
-                </label>
-              </div>
-              <div class="col-lg-6">
-                <label class="form-selectgroup-item">
-                  <input type="radio" name="fan-control-option" value="pwm" class="form-selectgroup-input">
-                  <span class="form-selectgroup-label d-flex align-items-center p-3">
-                    <span class="me-3">
-                      <span class="form-selectgroup-check"></span>
-                    </span>
-                    <span class="form-selectgroup-label-content">
-                      <span class="form-selectgroup-title strong mb-1">Use raw PWM values</span>
-                      <span class="d-block text-secondary">Fan controller will output PWM signal with specified duty cycle</span>
-                    </span>
-                  </span>
-                </label>
-              </div>
-            </div>
-
-          </div>
-          <div class="modal-footer">
-            <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
-              Cancel
-            </a>
-            <a href="#" class="btn btn-primary ms-auto" data-bs-dismiss="modal" id="submit-new-profile">
-              <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-              Create new fan profile
-            </a>
-          </div>
-        </div>
-      </div>
-    </div> <!-- end Add new profile modal -->
+        {% include views/footer.html %}
+    </div> <!-- page -->
 
     <!-- Tabler Core -->
     <script src="assets/js/tabler.min.js?1692870487" defer></script>
-    <script src="assets/js/demo.min.js?1692870487" defer></script>
+    <!-- <script src="assets/js/demo.min.js?1692870487" defer></script> -->
     <script src="assets/js/jquery.min.js" defer></script>
-    <script src="assets/js/kr_gui_root.js" defer></script>
-    <script src="assets/js/kr_gui_fan_status.js" defer></script>
-
+    <script src="assets/js/openfan_common.js" defer></script>
 
   </body>
 </html>
