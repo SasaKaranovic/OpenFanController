@@ -1,9 +1,8 @@
 server:
   hostname: localhost
   port: 3000
-  communication_timeout: 1
 hardware:
-  port: COM12
+  port:
   communication_timeout: 1
 fan_profiles:
   50% PWM:
