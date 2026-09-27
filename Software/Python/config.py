@@ -129,9 +129,9 @@ class ConfigReader:
     def update_fan_profile(self, profile_name, profile_type, profile_params):
         allowed_profile_types = ['PWM', 'RPM']
 
-        profile_type = profile_type.upper()
+        profile_type = str(profile_type or '').strip().upper()
 
-        if not any(profile_type in x  for x in allowed_profile_types):
+        if profile_type not in allowed_profile_types:
             logger.error(f"Fan profile type must be {allowed_profile_types}! (`{profile_type}` specified)")
             return False
 
