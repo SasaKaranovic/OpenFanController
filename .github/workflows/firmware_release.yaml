@@ -22,10 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout OpenFanController
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Checkout Pico SDK
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: raspberrypi/pico-sdk
           ref: ${{ env.PICO_SDK_VERSION }}
@@ -33,7 +33,7 @@ jobs:
           path: pico-sdk
 
       - name: Cache Pico SDK
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: pico-sdk
           key: pico-sdk-${{ env.PICO_SDK_VERSION }}
@@ -72,7 +72,7 @@ jobs:
           echo "path=Firmware/src/$UF2_FILE" >> "$GITHUB_OUTPUT"
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: firmware-uf2
           path: ${{ steps.artifact.outputs.path }}
@@ -82,7 +82,7 @@ jobs:
         run: echo "tag=$(date -u +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: OpenFAN Firmware ${{ steps.version.outputs.tag }}
