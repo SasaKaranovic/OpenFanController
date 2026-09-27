@@ -8,6 +8,8 @@ class FanCommander(SerialHardware):
     temperature_sensors = {}
 
     def __init__(self, port_info):
+        self.fan_rpm = {}
+        self.temperature_sensors = {}
         super(FanCommander, self).__init__(port_info, timeout=2)
 
     def _sendCommand(self, cmd, data=None, ret_entire_response=False):
