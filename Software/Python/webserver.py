@@ -29,9 +29,9 @@ class BaseHandler(RequestHandler):
         self.config = config
         self.board = board
         self.limit_fan_index_min = 0
-        self.limit_fan_index_max = 9
+        self.limit_fan_index_max = min(self.board.get_fan_count()-1, 0)
         self.limit_temp_index_min = 0
-        self.limit_temp_index_max = 3
+        self.limit_temp_index_max = min(self.board.get_sensor_count()-1, 0)
 
     def send_response(self, status, message='', data=None):
         self.write({'status': status, 'message': message, 'data': data})
@@ -302,7 +302,8 @@ class Info_Handler(BaseHandler):
     def get(self):
         data = {    'hardware': self.handler.get_hw_info(),
                     'firmware': self.handler.get_fw_info(),
-                    'software': f"Version: v{get_git_commit_date()} Build: {get_git_short_hash()}"
+                    'software': f"Version: v{get_git_commit_date()} Build: {get_git_short_hash()}",
+                    'capabilities': self.board.get_board_capabilities()
         }
 
         return self.send_response(status='ok', message='System information', data=data)
