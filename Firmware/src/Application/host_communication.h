@@ -32,7 +32,10 @@ typedef enum comm_cmd
     CMD_EMC_DEBUG_REG       = 0x08,
     CMD_EMC_READ_REG        = 0x09,
     CMD_EMC_WRITE_REG       = 0x0A,
-    CMD_LAST                = CMD_EMC_WRITE_REG,
+    CMD_CONFIG_READ         = 0x0B,
+    CMD_CONFIG_WRITE        = 0x0C,
+    CMD_CONFIG_RESET        = 0x0D,
+    CMD_LAST                = CMD_CONFIG_RESET,
 } comm_cmd_t;
 
 

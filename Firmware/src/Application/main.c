@@ -6,6 +6,7 @@
 #include "fan_control.h"
 #include "host_communication.h"
 #include "usb_cdc.h"
+#include "config.h"
 
 #define MIN_LOG_LEVEL_DEBUG
 #define LOGGER_TAG "MAIN"
@@ -32,6 +33,7 @@ int main(void)
     gpio_set_function(PICO_I2C_SDA_PIN, GPIO_FUNC_I2C);
     gpio_set_function(PICO_I2C_SCL_PIN, GPIO_FUNC_I2C);
 
+    openfan_config_init();
     fan_control_init();
     host_comm_init();
 
@@ -58,7 +60,14 @@ int main(void)
 
 bool systick_callback(repeating_timer_t *rt)
 {
-    gpio_put(LED_PIN, led_state);
-    led_state = !led_state;
+    if (openfan_config_flag_get(OPENFAN_CONFIG_BLINK_LED))
+    {
+        gpio_put(LED_PIN, led_state);
+        led_state = !led_state;
+    }
+    else
+    {
+        gpio_put(LED_PIN, 0);
+    }
     return true; // keep repeating
 }

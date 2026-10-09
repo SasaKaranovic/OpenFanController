@@ -13,6 +13,8 @@ pico_sdk_init()
 
 add_executable(OpenFAN_Firmware
                ${PROJECT_DIR_PATH}/Lib/Logger/logger.c
+               ${PROJECT_DIR_PATH}/Lib/flash_eeprom/flash_eeprom.c
+               ${PROJECT_DIR_PATH}/Application/config.c
                ${PROJECT_DIR_PATH}/Application/fan_control.c
                ${PROJECT_DIR_PATH}/Application/host_communication.c
                ${PROJECT_DIR_PATH}/Application/emc230x.c
@@ -25,12 +27,12 @@ add_executable(OpenFAN_Firmware
 
 target_include_directories(OpenFAN_Firmware PUBLIC
     ${PROJECT_DIR_PATH}/Lib/Logger
+    ${PROJECT_DIR_PATH}/Lib/flash_eeprom
 	${PROJECT_DIR_PATH}/Application
 	${PICO_SDK_PATH}/lib/tinyusb/src)
 
 target_link_libraries(OpenFAN_Firmware
 	hardware_flash
-	pico_multicore
 	pico_stdlib
     hardware_i2c
 	tinyusb_device)

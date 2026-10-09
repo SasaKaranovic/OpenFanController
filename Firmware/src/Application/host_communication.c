@@ -3,6 +3,7 @@
 #include "usb_cdc.h"
 #include "fan_control.h"
 #include "emc230x.h"
+#include "config.h"
 
 #define MIN_LOG_LEVEL_DEBUG
 #define LOGGER_TAG "HCOMM"
@@ -116,6 +117,11 @@ void host_comm_process_request(comm_cmd_t cmd, uint8_t *pData, uint32_t nDataLen
             response_add_str("PROTOCOL_VERSION:01\r\n");
             break;
 
+        case CMD_JUMP_TO_BOOTLOADER:
+            Logger_DEBUG("CMD_JUMP_TO_BOOTLOADER");
+            jump_to_bootloader();
+            break;
+
         // --- Debug Commands. These should be disabled in release version
         case CMD_EMC_DEBUG_REG:
             Logger_DEBUG("CMD_EMC_DEBUG_REG");
@@ -155,11 +161,46 @@ void host_comm_process_request(comm_cmd_t cmd, uint8_t *pData, uint32_t nDataLen
             response_add_str("OK");
             break;
 
-        case CMD_JUMP_TO_BOOTLOADER:
-            Logger_DEBUG("CMD_JUMP_TO_BOOTLOADER");
-            jump_to_bootloader();
+        // -- Additional commands
+        case CMD_CONFIG_READ:
+            Logger_DEBUG("CMD_CONFIG_READ");
+            bool field_value = false;
+
+            if(pData[0] == OPENFAN_CONFIG_BLINK_LED)
+            {
+                field_value = openfan_config_flag_get(OPENFAN_CONFIG_BLINK_LED);
+                response_add_byte(field_value);
+            }
+            else
+            {
+                response_add_str("unsupported cfg flag");
+            }
             break;
 
+        case CMD_CONFIG_WRITE:
+            if(pData[0] == OPENFAN_CONFIG_BLINK_LED)
+            {
+                if (nDataLen <1)
+                {
+                    response_add_str("Insufficient data");
+                }
+                else
+                {
+                    bool result = false;
+                    result = openfan_config_flag_set(OPENFAN_CONFIG_BLINK_LED, (pData[1]>0), true);
+                    response_add_byte(result);
+                }
+            }
+            else
+            {
+                response_add_str("unsupported cfg flag");
+            }
+            break;
+
+        case CMD_CONFIG_RESET:
+            Logger_DEBUG("CMD_CONFIG_RESET");
+            openfan_config_load_defaults(true);
+            break;
 
         default:
             Logger_ERROR("%s: Unsupported or invalid command", __FUNCTION__);
