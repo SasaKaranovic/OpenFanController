@@ -35,6 +35,7 @@ int main(void)
     fan_control_init();
     host_comm_init();
 
+#ifndef CFG_NOLED_BLINK
     // Setup systick timer
     repeating_timer_t timer;
     // negative timeout means exact delay (rather than delay between callbacks)
@@ -42,6 +43,7 @@ int main(void)
         gpio_put(LED_PIN, 1);
         return 1;
     }
+#endif
 
     Logger_INFO("Up and running");
 
@@ -56,9 +58,11 @@ int main(void)
     return 0;
 }
 
+#ifndef CFG_NOLED_BLINK
 bool systick_callback(repeating_timer_t *rt)
 {
     gpio_put(LED_PIN, led_state);
     led_state = !led_state;
     return true; // keep repeating
 }
+#endif
