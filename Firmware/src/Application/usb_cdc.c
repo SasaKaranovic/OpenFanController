@@ -12,7 +12,8 @@ typedef struct rbuff_s
     char data[BUFFER_SIZE];
 } rbuff_s;
 
-char rxBuffer[BUFFER_SIZE] = {0};
+static volatile bool terminal_connected = false;
+uint8_t rxBuffer[BUFFER_SIZE] = {0};
 rbuff_s txBuffer = { .head =0, .tail=0, .count=0, .data = {0} };
 
 void usb_read_bytes(uint8_t itf)
@@ -22,14 +23,7 @@ void usb_read_bytes(uint8_t itf)
     if (len) {
         len = MIN(len, BUFFER_SIZE);
         if (len){
-            uint32_t count;
-            count = tud_cdc_n_read(itf, rxBuffer, len);
-
-            // Loopback
-            #if 0
-            memcpy(txBuffer, rxBuffer, len);
-            nTxLen += len;
-            #endif
+            (void)tud_cdc_n_read(itf, rxBuffer, len);
 
             // Copy to host communication
             host_comm_receive_data(rxBuffer, len);
@@ -39,6 +33,11 @@ void usb_read_bytes(uint8_t itf)
 
 void usb_write_bytes(uint8_t itf)
 {
+    if(!terminal_connected)
+    {
+        return;
+    }
+
     if ( txBuffer.tail > txBuffer.head )
     {
         uint32_t count;
@@ -74,6 +73,14 @@ void tud_cdc_line_coding_cb(__unused uint8_t itf, cdc_line_coding_t const* p_lin
     }
 }
 
+void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
+{
+    if(dtr || rts)
+    {
+        terminal_connected = true;
+    }
+}
+
 void usb_cdc_tick(void)
 {
     int itf;
@@ -86,20 +93,27 @@ void usb_cdc_tick(void)
     }
 }
 
-void usb_cdc_send_arr(uint8_t *pData, uint32_t nLenght)
+void usb_cdc_send_arr(uint8_t *pData, uint32_t nLength)
 {
-    uint32_t len = MIN(nLenght, (BUFFER_SIZE-txBuffer.tail));
+    uint32_t len = MIN(nLength, (BUFFER_SIZE-txBuffer.tail-1));
     memcpy(&txBuffer.data[txBuffer.tail], pData, len);
     txBuffer.tail += len;
 }
 
 void usb_cdc_send_str(const char *pData)
 {
-    int nLenght = strlen(pData);
-    if(nLenght > 0)
+    int nLength = strlen(pData);
+    if(nLength > 0)
     {
-        uint32_t len = MIN(nLenght, (BUFFER_SIZE-txBuffer.tail));
+        uint32_t len = MIN(nLength, (BUFFER_SIZE-txBuffer.tail-1));
         memcpy(&txBuffer.data[txBuffer.tail], pData, len);
         txBuffer.tail += len;
     }
+}
+
+PUTCHAR_PROTOTYPE
+{
+  usb_cdc_send_arr((uint8_t *)&ch, 1);
+
+  return ch;
 }

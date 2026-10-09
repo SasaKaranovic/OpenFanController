@@ -9,18 +9,11 @@
 #define USBD_DESC_LEN (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN * CFG_TUD_CDC)
 #define USBD_MAX_POWER_MA 500
 
-#define USBD_ITF_CDC_0 0
-#define USBD_ITF_CDC_1 2
-#define USBD_ITF_MAX 4
+#define USBD_ITF_MAX (CFG_TUD_CDC * 2)
 
-#define USBD_CDC_0_EP_CMD 0x81
-#define USBD_CDC_1_EP_CMD 0x83
-
-#define USBD_CDC_0_EP_OUT 0x01
-#define USBD_CDC_1_EP_OUT 0x03
-
-#define USBD_CDC_0_EP_IN 0x82
-#define USBD_CDC_1_EP_IN 0x84
+#define CDC_EP_CMD(n) (0x81 + (n) * 2)
+#define CDC_EP_OUT(n) (0x01 + (n) * 2)
+#define CDC_EP_IN(n)  (0x82 + (n) * 2)
 
 #define USBD_CDC_CMD_MAX_SIZE 8
 #define USBD_CDC_IN_OUT_MAX_SIZE 64
@@ -36,7 +29,11 @@ static const tusb_desc_device_t usbd_desc_device = {
     .bLength = sizeof(tusb_desc_device_t),
     .bDescriptorType = TUSB_DESC_DEVICE,
     .bcdUSB = 0x0200,
+    #if (CFG_TUD_CDC == 1)
+    .bDeviceClass = TUSB_CLASS_CDC,
+    #else
     .bDeviceClass = TUSB_CLASS_MISC,
+    #endif
     .bDeviceSubClass = MISC_SUBCLASS_COMMON,
     .bDeviceProtocol = MISC_PROTOCOL_IAD,
     .bMaxPacketSize0 = CFG_TUD_ENDPOINT0_SIZE,
@@ -49,24 +46,14 @@ static const tusb_desc_device_t usbd_desc_device = {
     .bNumConfigurations = 1,
 };
 
-static const uint8_t usbd_desc_cfg[USBD_DESC_LEN] = {
-    TUD_CONFIG_DESCRIPTOR(1, USBD_ITF_MAX, USBD_STR_0, USBD_DESC_LEN,
-        TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, USBD_MAX_POWER_MA),
-
-    TUD_CDC_DESCRIPTOR(USBD_ITF_CDC_0, USBD_STR_CDC, USBD_CDC_0_EP_CMD,
-        USBD_CDC_CMD_MAX_SIZE, USBD_CDC_0_EP_OUT, USBD_CDC_0_EP_IN,
-        USBD_CDC_IN_OUT_MAX_SIZE),
-
-    TUD_CDC_DESCRIPTOR(USBD_ITF_CDC_1, USBD_STR_CDC, USBD_CDC_1_EP_CMD,
-        USBD_CDC_CMD_MAX_SIZE, USBD_CDC_1_EP_OUT, USBD_CDC_1_EP_IN,
-        USBD_CDC_IN_OUT_MAX_SIZE),
-};
+static uint8_t usbd_desc_cfg[256];
+static uint16_t usbd_desc_cfg_len;
 
 static char usbd_serial[USBD_STR_SERIAL_LEN] = "000000000000";
 
 static const char *const usbd_desc_str[] = {
     [USBD_STR_MANUF] = "Karanovic Research",
-    [USBD_STR_PRODUCT] = "OpenFan",
+    [USBD_STR_PRODUCT] = "OpenFan-Controller",
     [USBD_STR_SERIAL] = usbd_serial,
     [USBD_STR_CDC] = "Board CDC",
 };
@@ -78,6 +65,39 @@ const uint8_t *tud_descriptor_device_cb(void)
 
 const uint8_t *tud_descriptor_configuration_cb(uint8_t index)
 {
+    if (usbd_desc_cfg_len == 0) {
+        uint8_t *desc = usbd_desc_cfg;
+        uint8_t itf_num = 0;
+        uint8_t *p = desc;
+
+        uint8_t config_desc[TUD_CONFIG_DESC_LEN] = {
+            TUD_CONFIG_DESCRIPTOR(
+                1, USBD_ITF_MAX, USBD_STR_0, USBD_DESC_LEN,
+                TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, USBD_MAX_POWER_MA
+            )
+        };
+        memcpy(p, config_desc, TUD_CONFIG_DESC_LEN);
+        p += TUD_CONFIG_DESC_LEN;
+
+        for (int i = 0; i < CFG_TUD_CDC; i++) {
+            uint8_t ep_cmd = CDC_EP_CMD(i);
+            uint8_t ep_out = CDC_EP_OUT(i);
+            uint8_t ep_in = CDC_EP_IN(i);
+
+            uint8_t cdc_desc[TUD_CDC_DESC_LEN] = {
+                TUD_CDC_DESCRIPTOR(itf_num, USBD_STR_CDC,
+                    ep_cmd, USBD_CDC_CMD_MAX_SIZE,
+                    ep_out, ep_in, USBD_CDC_IN_OUT_MAX_SIZE
+                )
+            };
+            memcpy(p, cdc_desc, TUD_CDC_DESC_LEN);
+            p += TUD_CDC_DESC_LEN;
+            itf_num += 2;
+        }
+
+        usbd_desc_cfg_len = p - desc;
+    }
+
     return usbd_desc_cfg;
 }
 
