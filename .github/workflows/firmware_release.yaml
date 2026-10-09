@@ -71,11 +71,38 @@ jobs:
           fi
           echo "path=Firmware/src/$UF2_FILE" >> "$GITHUB_OUTPUT"
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v7
+      - name: Configure firmware build (no LED blink)
+        working-directory: Firmware/src
+        env:
+          PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
+        run: cmake -B build_no_led_blink -S . -DCFG_NOLED_BLINK=ON
+
+      - name: Build firmware (no LED blink)
+        working-directory: Firmware/src
+        env:
+          PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
+        run: cmake --build build_no_led_blink -j"$(nproc)"
+
+      - name: Locate .uf2 artifact (no LED blink)
+        id: artifact_no_led_blink
+        working-directory: Firmware/src
+        run: |
+          UF2_FILE=$(find build_no_led_blink -maxdepth 1 -name '*.uf2' | head -n1)
+          if [ -z "$UF2_FILE" ]; then
+            echo "No .uf2 file produced by the no-LED-blink build" >&2
+            exit 1
+          fi
+          SUFFIXED="${UF2_FILE%.uf2}_no_led_blink.uf2"
+          cp "$UF2_FILE" "$SUFFIXED"
+          echo "path=Firmware/src/$SUFFIXED" >> "$GITHUB_OUTPUT"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
         with:
           name: firmware-uf2
-          path: ${{ steps.artifact.outputs.path }}
+          path: |
+            ${{ steps.artifact.outputs.path }}
+            ${{ steps.artifact_no_led_blink.outputs.path }}
 
       - name: Set release version
         id: version
@@ -88,4 +115,8 @@ jobs:
           name: OpenFAN Firmware ${{ steps.version.outputs.tag }}
           body: |
             Automated firmware build from commit ${{ github.sha }}.
-          files: ${{ steps.artifact.outputs.path }}
+
+            Files ending in `_no_led_blink` are built with `CFG_NOLED_BLINK` defined.
+          files: |
+            ${{ steps.artifact.outputs.path }}
+            ${{ steps.artifact_no_led_blink.outputs.path }}

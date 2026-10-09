@@ -21,7 +21,10 @@ add_executable(OpenFAN_Firmware
                ${PROJECT_DIR_PATH}/Application/main.c
            )
 
-
+option(CFG_NOLED_BLINK "Build firmware with heartbeat LED disabled" OFF)
+if(CFG_NOLED_BLINK)
+    target_compile_definitions(OpenFAN_Firmware PRIVATE CFG_NOLED_BLINK)
+endif()
 
 target_include_directories(OpenFAN_Firmware PUBLIC
     ${PROJECT_DIR_PATH}/Lib/Logger
