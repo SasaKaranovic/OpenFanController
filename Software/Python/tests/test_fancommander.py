@@ -124,8 +124,6 @@ def test_no_reply_does_not_crash(commander, monkeypatch):
     assert commander.get_all_fan_rpm() == {}
 
 
-@pytest.mark.xfail(strict=True, reason="Known bug: fan_rpm / temperature_sensors are class attributes shared by "
-                                        "every FanCommander instance")
 def test_instances_do_not_share_rpm_state():
     first = FakeFanCommander(FakeFirmware())
     second = FakeFanCommander(FakeFirmware(fan_count=2))

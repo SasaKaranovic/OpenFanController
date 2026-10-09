@@ -17,7 +17,7 @@
 defaults:
   safe_pwm: 0                 # PWM % every fan is set to before and after a run
   timing:
-    settle_s: 5                # max time to wait for fan RPM to reach a new value
+    settle_s: 10                # max time to wait for fan RPM to reach a new value
     poll_s: 0.5                 # how often to poll while waiting
     test_timeout_s: 180         # per-test timeout (needs pytest-timeout)
   rpm:
@@ -44,6 +44,12 @@ boards:
     fan_count: 1
     sensor_count: 0
     features: [pwm, aliases]
+  openfan-micro-pd:
+    name: OpenFAN Micro PD
+    hw_rev: "4"
+    fan_count: 1
+    sensor_count: 1
+    features: [pwm, temperature]
 
 devices:
   # --- Simulated devices: no hardware needed. Used to try the suite locally and in CI ---
@@ -69,6 +75,14 @@ devices:
     fans_connected: [0]
     suites: [smoke, html, fan_control, aliases]
     timing: {settle_s: 3, poll_s: 0.1}
+  sim-micro-pd:
+    board: openfan-micro-pd
+    simulated: true
+    server_port: 3193
+    fans_connected: [0]
+    sensors_connected: [0]
+    suites: [smoke, html, fan_control]
+    timing: {settle_s: 3, poll_s: 0.1}
 
   # --- Physical controllers on the test runner ---
   # Fill in `usb_serial` (see `run_tests.bat --list-devices`) or `port`, then set `enabled: true`.
@@ -77,9 +91,9 @@ devices:
     enabled: false
     board: openfan-controller
     usb_serial: "CHANGE_ME"     # USB serial number; the port (COMx or /dev/tty...) is looked up from it
-    # port: COM7                # ...or give the port directly instead
+    # port: COM12                # ...or give the port directly instead
     server_port: 3101
-    fans_connected: [0, 1]      # channels with a real fan (RPM measurements only run on these)
+    fans_connected: [0]      # channels with a real fan (RPM measurements only run on these)
     suites: [smoke, html, fan_control, profiles, aliases]
     known_failures: {}
     #  "test_hw_fan_control.py::test_rpm_follows_pwm[fan1]": "fan 1 tach wire damaged (issue #61)"
@@ -87,6 +101,7 @@ devices:
     enabled: false
     board: openfan-xl
     usb_serial: "CHANGE_ME"
+    # port: COM10
     server_port: 3102
     fans_connected: [0]
     sensors_connected: [0]
@@ -95,6 +110,16 @@ devices:
     enabled: false
     board: openfan-micro
     usb_serial: "CHANGE_ME"
+    # port: COM24
     server_port: 3103
     fans_connected: [0]
+    suites: [smoke, html, fan_control, aliases]
+  lab-micro-pd-01:
+    enabled: false
+    board: openfan-micro-pd
+    usb_serial: "CHANGE_ME"
+    # port: COM25
+    server_port: 3104
+    fans_connected: [0]
+    sensors_connected: [0]
     suites: [smoke, html, fan_control, aliases]

@@ -1,0 +1,126 @@
+name: Hardware tests
+
+# Runs Software/Python/hardware_tests against the OpenFAN controllers connected to the
+# self-hosted runner(s) labelled `openfan-lab`. Devices come from
+# Software/Python/hardware_tests/devices.yaml (every `enabled: true`, non-simulated device).
+#
+# SECURITY: this repository is public. Do NOT add a `pull_request` trigger: code from a fork's
+# PR would run on the lab machine. To test a PR on hardware, have a maintainer run this
+# workflow manually on the PR branch ("Run workflow" -> "Use workflow from").
+on:
+  workflow_dispatch:
+    inputs:
+      device:
+        description: 'Device name from devices.yaml, or "all"'
+        type: string
+        default: all
+      scope:
+        description: 'supported = skip unsupported features; all = verify they are reported as unsupported'
+        type: choice
+        options: [supported, all]
+        default: supported
+      suite:
+        description: 'Comma separated suites (smoke,html,fan_control,profiles,aliases,sensors), "all", or "default" (each device''s own list)'
+        type: string
+        default: default
+  push:
+    branches: ['master']
+    paths:
+      - 'Software/Python/**'
+      - '.github/workflows/hardware_tests.yaml'
+  schedule:
+    - cron: '23 5 * * *'        # nightly full run (scope: all)
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    name: Select devices
+    runs-on: ubuntu-latest
+    outputs:
+      devices: ${{ steps.matrix.outputs.devices }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install ruamel.yaml==0.17.21
+      - id: matrix
+        env:
+          DEVICE_INPUT: ${{ inputs.device || 'all' }}
+        run: echo "devices=$(python Software/Python/hardware_tests/inventory.py matrix --device "$DEVICE_INPUT")" >> "$GITHUB_OUTPUT"
+      - run: echo "Devices selected - ${{ steps.matrix.outputs.devices }}"
+
+  test:
+    name: ${{ matrix.device }}
+    needs: inventory
+    if: needs.inventory.outputs.devices != '[]'
+    runs-on: [self-hosted, openfan-lab]
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        device: ${{ fromJSON(needs.inventory.outputs.devices) }}
+    # Never let two jobs drive the same physical controller at the same time
+    concurrency:
+      group: openfan-hw-${{ matrix.device }}
+      cancel-in-progress: false
+    env:
+      DEVICE: ${{ matrix.device }}
+      SCOPE: ${{ inputs.scope || (github.event_name == 'schedule' && 'all') || 'supported' }}
+      SUITE: ${{ inputs.suite || 'default' }}
+    defaults:
+      run:
+        working-directory: Software/Python
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: ./run_tests.sh --setup --list-devices
+
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: run_tests.bat --setup --list-devices
+
+      - name: Run hardware tests (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          args=(hardware_tests --device "$DEVICE" --scope "$SCOPE" --junitxml "hardware_tests/results/junit-$DEVICE.xml")
+          if [ "$SUITE" != "default" ]; then args+=(--suite "$SUITE"); fi
+          .venv/bin/python -m pytest "${args[@]}"
+
+      - name: Run hardware tests (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $pytestArgs = @('hardware_tests', '--device', $env:DEVICE, '--scope', $env:SCOPE, '--junitxml', "hardware_tests/results/junit-$env:DEVICE.xml")
+          if ($env:SUITE -ne 'default') { $pytestArgs += @('--suite', $env:SUITE) }
+          & .venv\Scripts\python.exe -m pytest @pytestArgs
+          exit $LASTEXITCODE
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hw-results-${{ matrix.device }}
+          path: Software/Python/hardware_tests/results/
+          if-no-files-found: ignore
+
+  summary:
+    name: Summary
+    needs: [inventory, test]
+    if: always() && needs.inventory.outputs.devices != '[]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: hw-results-*
+          path: results
+      - name: Write summary
+        run: python Software/Python/hardware_tests/summarize.py results >> "$GITHUB_STEP_SUMMARY"

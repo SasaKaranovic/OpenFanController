@@ -1,5 +1,8 @@
 # OpenFAN Python software tests
 
+> Full documentation: [software tests](../docs/testing/software-tests.md) ·
+> [running](../docs/testing/running-tests.md) · [overview](../docs/testing/README.md)
+
 Unit and API tests for the code in `Software/Python`. They run on any machine: **no OpenFAN
 hardware is needed**. The serial link is replaced by a fake firmware, and config files are
 written to a temporary folder, so your real `config.yaml` is never touched.

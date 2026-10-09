@@ -55,8 +55,6 @@ class FakeFirmware:
         self.temperatures = dict(temperatures) if temperatures is not None else {0: 250, 1: -100, 2: 0, 3: 1234}
         self.log_noise = log_noise
         self.requests = []
-        self.fan_rpm = {}
-        self.temperature_sensors = {}
 
     @staticmethod
     def _u16(value):
@@ -110,6 +108,9 @@ class FakeFanCommander(FanCommander):
         # Deliberately skip SerialHardware.__init__ (it would open a serial port)
         self.firmware = firmware or FakeFirmware()
         self.sent = []
+        # Normally created by FanCommander.__init__, which is skipped here
+        self.fan_rpm = {}
+        self.temperature_sensors = {}
 
     def serial_transaction(self, payload, ignore_response=False):
         self.sent.append(payload)

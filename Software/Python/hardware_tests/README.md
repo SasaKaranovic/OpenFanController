@@ -1,5 +1,8 @@
 # OpenFAN hardware tests
 
+> Full documentation: [architecture and reference](../docs/testing/hardware-tests.md) ·
+> [extending](../docs/testing/extending-hardware-tests.md) · [running](../docs/testing/running-tests.md)
+
 End-to-end tests that start the OpenFAN web server against a **real controller** (or a
 simulated one) and exercise it over HTTP: the API, the web page, and the fans themselves
 (set a value → record the reading → change it → verify the reading changed).
@@ -47,7 +50,7 @@ Without the scripts: `python -m pytest hardware_tests --device sim-xl`.
 
 The server always gets a **copy** of the config in a temp folder, because tests change aliases
 and profiles and the server writes those to its config file. Your `config.yaml` is never touched.
-Every fan is set to the device's `safe_pwm` (default 100%) before and after a run.
+Every fan is set to the device's `safe_pwm` (see `defaults:` in `devices.yaml`) before and after a run.
 
 ## Adding a physical controller
 
