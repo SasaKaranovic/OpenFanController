@@ -13,8 +13,8 @@ typedef struct rbuff_s
 } rbuff_s;
 
 static volatile bool terminal_connected = false;
-uint8_t rxBuffer[BUFFER_SIZE] = {0};
-rbuff_s txBuffer = { .head =0, .tail=0, .count=0, .data = {0} };
+static uint8_t rxBuffer[BUFFER_SIZE] = {0};
+static rbuff_s txBuffer = { .head =0, .tail=0, .count=0, .data = {0} };
 
 void usb_read_bytes(uint8_t itf)
 {
