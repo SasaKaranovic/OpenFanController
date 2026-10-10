@@ -21,7 +21,7 @@ static uint32_t Log_CreateHeader(const char *tag, LogLevel_t level);
 
 
 #define LOG_BUFFER_MAX_LEN  250
-char gLogBuffer[LOG_BUFFER_MAX_LEN] = {0};
+static char gLogBuffer[LOG_BUFFER_MAX_LEN] = {0};
 
 
 bool Logger_Print(const char* tag, LogLevel_t level, const char* format, ...)
