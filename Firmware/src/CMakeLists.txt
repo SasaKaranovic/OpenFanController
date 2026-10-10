@@ -11,6 +11,8 @@ message("PROJECT_DIR_PATH is ${PROJECT_DIR_PATH}")
 
 pico_sdk_init()
 
+# Print memory usage
+string(APPEND CMAKE_EXE_LINKER_FLAGS "-Wl,--print-memory-usage")
 add_executable(OpenFAN_Firmware
                ${PROJECT_DIR_PATH}/Lib/Logger/logger.c
                ${PROJECT_DIR_PATH}/Application/fan_control.c
