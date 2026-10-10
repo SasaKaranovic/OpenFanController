@@ -1,4 +1,4 @@
-#if !defined(_TUSB_CONFIG_H_)
+#ifndef _TUSB_CONFIG_H_
 #define _TUSB_CONFIG_H_
 
 #include <tusb_option.h>
