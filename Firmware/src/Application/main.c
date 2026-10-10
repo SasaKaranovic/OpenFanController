@@ -11,14 +11,10 @@
 #define LOGGER_TAG "MAIN"
 #include "logger.h"
 
-
+#ifndef CFG_NOLED_BLINK
 bool led_state = false;
-
 bool systick_callback(repeating_timer_t *rt);
-
-bool reserved_addr(uint8_t addr) {
-    return (addr & 0x78) == 0 || (addr & 0x78) == 0x78;
-}
+#endif
 
 int main(void)
 {
@@ -27,6 +23,7 @@ int main(void)
 
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
+    gpio_put(LED_PIN, 0);
 
     i2c_init(PICO_I2C_INSTANCE, 400 * 1000);
     gpio_set_function(PICO_I2C_SDA_PIN, GPIO_FUNC_I2C);
