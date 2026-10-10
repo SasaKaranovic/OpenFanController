@@ -361,20 +361,44 @@ static void response_add_data(uint8_t *pData, uint32_t nLen)
 
 static void response_add_byte(uint8_t data)
 {
-    sprintf((char *)&pTxBuffer[nTxBufferLen], "%02X", data);
-    nTxBufferLen += 2;
+    int len;
+    len = snprintf((char *)&pTxBuffer[nTxBufferLen], 3, "%02X", data);
+    if(len == 2)
+    {
+        nTxBufferLen += 2;
+    }
+    else
+    {
+        Logger_ERROR("%s: snprintf error! (%d)", __FUNCTION__, len);
+    }
 }
 
 static void response_add_u32(uint32_t data)
 {
-    sprintf((char *)&pTxBuffer[nTxBufferLen], "%08lX", data);
-    nTxBufferLen += 8;
+    int len;
+    len = snprintf((char *)&pTxBuffer[nTxBufferLen], 9, "%08lX", data);
+    if(len == 8)
+    {
+        nTxBufferLen += 8;
+    }
+    else
+    {
+        Logger_ERROR("%s: snprintf error! (%d)", __FUNCTION__, len);
+    }
 }
 
 static void response_add_u16(uint16_t data)
 {
-    sprintf((char *)&pTxBuffer[nTxBufferLen], "%04X", data);
-    nTxBufferLen += 4;
+    int len;
+    len = snprintf((char *)&pTxBuffer[nTxBufferLen], 5, "%04X", data);
+    if(len == 4)
+    {
+        nTxBufferLen += 4;
+    }
+    else
+    {
+        Logger_ERROR("%s: snprintf error! (%d)", __FUNCTION__, len);
+    }
 }
 
 static void response_add_str(const char *pStr)
