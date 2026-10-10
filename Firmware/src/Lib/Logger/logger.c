@@ -17,7 +17,7 @@ static const char LogLevels[LOG_LAST] = {'T', 'D', 'I', 'W', 'E', 'F', 'O'};
 
 
 //Static functions
-static uint32_t Log_CreateHeader(const char *tag, LogLevel_t level);
+static int32_t Log_CreateHeader(const char *tag, LogLevel_t level);
 
 
 #define LOG_BUFFER_MAX_LEN  250
@@ -103,7 +103,7 @@ bool Logger_PrintBuffer(const char* tag, LogLevel_t level, const char* buffer, c
 }
 
 
-static uint32_t Log_CreateHeader(const char *tag, LogLevel_t level)
+static int32_t Log_CreateHeader(const char *tag, LogLevel_t level)
 {
     int32_t len = 0;
 
