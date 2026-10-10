@@ -23,7 +23,7 @@ int main(void)
 
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
-    gpio_put(LED_PIN, 0);
+    gpio_put(LED_PIN, false);
 
     i2c_init(PICO_I2C_INSTANCE, 400 * 1000);
     gpio_set_function(PICO_I2C_SDA_PIN, GPIO_FUNC_I2C);
@@ -37,7 +37,7 @@ int main(void)
     repeating_timer_t timer;
     // negative timeout means exact delay (rather than delay between callbacks)
     if (!add_repeating_timer_us(-500000, systick_callback, NULL, &timer)) {
-        gpio_put(LED_PIN, 1);
+        gpio_put(LED_PIN, true);
         return 1;
     }
 #endif
