@@ -8,8 +8,8 @@
 
 #define FAN_TICK_PERIOD         1000
 
-uint32_t nFanTick = 0;
-uint16_t fan_rpm[NUM_TOTAL_FAN] = {0};
+static uint32_t nFanTick = 0;
+static uint16_t fan_rpm[NUM_TOTAL_FAN] = {0};
 
 // --- NOTE ---
 // There are dedicated commands for operations that target all fans
@@ -84,28 +84,12 @@ void fan_periodic_tick(void)
                      fan_rpm[9]
                      );
 
-        // uint8_t reg=0;
-
-        // emc230x_read_register(0x25, &reg);
-        // Logger_INFO("Fan Stall: 0x%02X", reg);
-
-        // emc230x_read_register(0x26, &reg);
-        // Logger_INFO("Fan SPIN: 0x%02X", reg);
-
-        // emc230x_read_register(0x27, &reg);
-        // Logger_INFO("Driver Fail: 0x%02X", reg);
-
-        // emc230x_read_register(0x32, &reg);
-        // Logger_INFO("Fan 1: 0x%02X", reg);
-
-
         nFanTick = time_us_32() + FAN_TICK_PERIOD;
     }
 }
 
 void fan_control_read_fan_rpm(uint8_t fan, uint16_t *pRPM)
 {
-    #if 1
     if(pRPM == NULL)
     {
         Logger_ERROR("%s: Null pointer. Aborting!", __FUNCTION__);
@@ -119,12 +103,6 @@ void fan_control_read_fan_rpm(uint8_t fan, uint16_t *pRPM)
     }
 
     *pRPM = fan_rpm[fan];
-
-    #else
-    fan = map_channel_to_controller(fan);
-    emc230x_read_fan_rpm(fan, pRPM);
-    Logger_DEBUG("%s: Fan:%d RPM:%d", __FUNCTION__, fan, *pRPM);
-    #endif
 }
 
 void fan_control_read_all_rpm(uint16_t *pRPM, uint8_t nLen)
@@ -213,71 +191,3 @@ static void switch_fan_controller_to(uint8_t controller)
         Logger_ERROR("%s: Unknown or unsupported controller!", __FUNCTION__);
     }
 }
-
-#if 0
-//
-static uint8_t map_channel_to_controller(uint8_t channel)
-{
-    switch(channel)
-    {
-        case 1:
-            emc230x_set_address(EMC_CTRL_1_ADDRESS);
-            return 4;
-            break;
-
-        case 2:
-            emc230x_set_address(EMC_CTRL_1_ADDRESS);
-            return 3;
-            break;
-
-        case 3:
-            emc230x_set_address(EMC_CTRL_1_ADDRESS);
-            return 2;
-            break;
-
-        case 4:
-            emc230x_set_address(EMC_CTRL_1_ADDRESS);
-            return 1;
-            break;
-
-        case 5:
-            emc230x_set_address(EMC_CTRL_1_ADDRESS);
-            return 0;
-            break;
-
-
-        case 6:
-            emc230x_set_address(EMC_CTRL_2_ADDRESS);
-            return 4;
-            break;
-
-        case 7:
-            emc230x_set_address(EMC_CTRL_2_ADDRESS);
-            return 3;
-            break;
-
-        case 8:
-            emc230x_set_address(EMC_CTRL_2_ADDRESS);
-            return 2;
-            break;
-
-        case 9:
-            emc230x_set_address(EMC_CTRL_2_ADDRESS);
-            return 1;
-            break;
-
-        case 10:
-            emc230x_set_address(EMC_CTRL_2_ADDRESS);
-            return 0;
-            break;
-
-        default:
-            Logger_ERROR("Unknown FAN location.");
-            emc230x_set_address(EMC_CTRL_1_ADDRESS);
-            return 0;
-            break;
-
-    }
-
-}
-#endif
