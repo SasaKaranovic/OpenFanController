@@ -114,11 +114,15 @@ const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
         char serial[USBD_STR_SERIAL_LEN];
 
         if (index >= sizeof(usbd_desc_str) / sizeof(usbd_desc_str[0]))
+        {
             return NULL;
+        }
 
         str = usbd_desc_str[index];
         for (len = 0; len < DESC_STR_MAX - 1 && str[len]; ++len)
+        {
             desc_str[1 + len] = str[len];
+        }
     }
 
     desc_str[0] = (TUSB_DESC_STRING << 8) | (2 * len + 2);
