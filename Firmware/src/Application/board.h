@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#include <stdio.h>
 #include <hardware/irq.h>
 #include <hardware/gpio.h>
 #include <hardware/structs/sio.h>
