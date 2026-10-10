@@ -26,7 +26,7 @@ static void host_comm_send_response(void);
 static void host_comm_rearm(void);
 static uint8_t buffer_to_uint8(uint8_t *pBuffer);
 static uint8_t ascii_to_hex(uint8_t ascii);
-static bool ascii_array_to_hex_array(uint8_t *pASCII, uint32_t nLen, uint8_t *pHex, uint32_t *nHexLen);
+static bool ascii_array_to_hex_array(uint8_t *pASCII, uint32_t nLen, uint8_t *pTarget, uint32_t *nHexLen);
 static void response_add_data(uint8_t *pData, uint32_t nLen);
 static void response_add_byte(uint8_t data);
 static void response_add_u32(uint32_t data);
