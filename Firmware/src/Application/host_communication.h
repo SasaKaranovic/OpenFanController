@@ -10,14 +10,13 @@
 #define COMM_MIN_MESSAGE_LEN        3
 #define COMM_RESPONSE_CHARACTER     '<'
 #define COMM_RX_ASCII_BUFFER_LEN    128
-#define COMM_RX_HEX_BUFFER_LEN      COMM_RX_ASCII_BUFFER_LEN/2 - 1
+#define COMM_RX_HEX_BUFFER_LEN      (COMM_RX_ASCII_BUFFER_LEN/2 - 1)
 #define COMM_TX_BUFFER_LEN          128
 
 #define COMM_PROTOCOL_VERSION       1
 
 typedef enum comm_cmd
 {
-    CMD_FIRST,
     CMD_FAN_ALL_GET_RPM     = 0x00,
     CMD_FAN_GET_RPM         = 0x01,
     CMD_FAN_SET_PWM         = 0x02,
