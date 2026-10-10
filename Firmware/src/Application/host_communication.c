@@ -13,14 +13,14 @@
 // 1. Communication is ASCII only, so we could use non-ASCII characters to indicate start and end of package
 //
 
-uint8_t pTxBuffer[COMM_TX_BUFFER_LEN] = {0};
-uint32_t nTxBufferLen = 1;
-uint8_t pRxBuffer[COMM_RX_ASCII_BUFFER_LEN] = {0};
-uint32_t nRxBufferLen = 0;
-uint8_t pPackage[COMM_RX_HEX_BUFFER_LEN] = {0};
-uint32_t nPackageLen = 0;
-bool bRxStarted = false;
-bool bRxComplete = false;
+static uint8_t pTxBuffer[COMM_TX_BUFFER_LEN] = {0};
+static uint32_t nTxBufferLen = 1;
+static uint8_t pRxBuffer[COMM_RX_ASCII_BUFFER_LEN] = {0};
+static uint32_t nRxBufferLen = 0;
+static uint8_t pPackage[COMM_RX_HEX_BUFFER_LEN] = {0};
+static uint32_t nPackageLen = 0;
+static bool bRxStarted = false;
+static bool bRxComplete = false;
 
 static void host_comm_send_response(void);
 static void host_comm_rearm(void);
