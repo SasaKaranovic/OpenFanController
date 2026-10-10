@@ -6,7 +6,6 @@
 #define LOGGER_TAG "EMC230X"
 #include "logger.h"
 
-// #define EMC230X_DEVICE_I2C_ADDRESS      0x2C
 #define EMC230X_DEVICE_I2C_ADDRESS      0x2D
 #define EMC230X_DEVICE_MAX_CHANNELS     5
 
