@@ -40,7 +40,7 @@
 
 #define I2C_COMM_TIMEOUT                    100000
 
-const uint16_t EMC320X_FAN_TACH_RANGE_MIN[4] = {480, 968, 1935, 3870};
+static const uint16_t EMC320X_FAN_TACH_RANGE_MIN[4] = {480, 968, 1935, 3870};
 
 static void target_rpm_to_tach(uint16_t nRPM, uint8_t *pHighByte, uint8_t *pLowByte);
 static uint16_t register_data_to_rpm(uint8_t high, uint8_t low, uint8_t range);
@@ -63,8 +63,6 @@ void emc230x_config_fans(void)
 {
     for(uint8_t i=0; i<EMC230X_DEVICE_MAX_CHANNELS; i++)
     {
-        // emc230x_write_register(EMC2305_REG_FAN_CONFIG(i), 0x2B);
-
         // Enabel Tach filter, both methods of control, 50 PRM tolerance
         emc230x_write_register(EMC2305_REG_FAN_CONFIG2(i), 0x58);
     }
